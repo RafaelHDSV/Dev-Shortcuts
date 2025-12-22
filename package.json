@@ -1,0 +1,39 @@
+{
+  "name": "dev-shortcuts",
+  "displayName": "dev-shortcuts",
+  "description": "Dev Shortcuts example for VS Code",
+  "version": "1.0.0",
+  "publisher": "rafael-vieira",
+  "repository": "https://github.com/RafaelHDSV/Dev-Shortcuts",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.devShortcuts",
+        "title": "Dev Shortcuts"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@stylistic/eslint-plugin": "^2.9.0",
+    "@types/node": "^22",
+    "@types/vscode": "^1.100.0",
+    "eslint": "^9.13.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.0"
+  }
+}
