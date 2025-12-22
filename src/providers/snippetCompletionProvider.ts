@@ -32,13 +32,22 @@ export function registerSnippetCompletion(context: vscode.ExtensionContext) {
             vscode.CompletionItemKind.Snippet
           )
 
-          item.detail = snippet.name
-          item.documentation = snippet.description
-            ? new vscode.MarkdownString(snippet.description)
-            : undefined
+          item.detail = `${snippet.name} — ${snippet.source}`
+          item.documentation = new vscode.MarkdownString(
+            `**${snippet.source} Snippet**\n\n${snippet.name}`
+          )
 
           item.range = range
           item.insertText = new vscode.SnippetString(snippet.body.join('\n'))
+
+          item.kind =
+            snippet.source === 'Custom'
+              ? vscode.CompletionItemKind.Function
+              : vscode.CompletionItemKind.Snippet
+          item.tags =
+            snippet.source === 'Custom'
+              ? [vscode.CompletionItemTag.Deprecated] // só para destacar
+              : []
 
           return item
         })
