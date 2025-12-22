@@ -1,0 +1,17 @@
+{
+  "React Component with Props Interface": {
+    "prefix": "!component",
+    "body": [
+      "interface I${1:Component}Props {}",
+      "",
+      "export default function ${1:Component}({}: I${1:Component}Props) {",
+      "  return (",
+      "    <>",
+      "      $0",
+      "    </>",
+      "  )",
+      "}"
+    ],
+    "description": "Cria um componente React com interface de props"
+  }
+}

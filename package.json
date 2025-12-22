@@ -19,6 +19,16 @@
         "command": "extension.devShortcuts",
         "title": "Dev Shortcuts"
       }
+    ],
+    "snippets": [
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/react.code-snippets"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/react.code-snippets"
+      }
     ]
   },
   "scripts": {
