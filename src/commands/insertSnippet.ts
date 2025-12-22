@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import { defaultSnippets } from '../snippets/defaults'
 
 interface CustomSnippet {
   name: string
@@ -12,25 +13,28 @@ export async function insertSnippet() {
   const config = vscode.workspace.getConfiguration('devShortcuts')
   const customSnippets = config.get<CustomSnippet[]>('customSnippets') || []
 
-  const items = customSnippets.map((snippet) => ({
-    label: snippet.name,
-    snippet
-  }))
+  const allSnippets: {
+    label: string
+    description: string
+    body: string[]
+  }[] = [
+    ...defaultSnippets.map((s) => ({
+      label: s.name,
+      description: 'Default',
+      body: s.body
+    })),
+    ...customSnippets.map((s) => ({
+      label: s.name,
+      description: 'Custom',
+      body: s.body
+    }))
+  ]
 
-  if (!items.length) {
-    vscode.window.showInformationMessage(
-      'Nenhum snippet customizado configurado.'
-    )
-    return
-  }
-
-  const selected = await vscode.window.showQuickPick(items, {
-    placeHolder: 'Selecione um snippet para inserir'
+  const selected = await vscode.window.showQuickPick(allSnippets, {
+    placeHolder: 'Selecione um snippet do Dev Shortcuts'
   })
 
   if (!selected) return
 
-  editor.insertSnippet(
-    new vscode.SnippetString(selected.snippet.body.join('\n'))
-  )
+  editor.insertSnippet(new vscode.SnippetString(selected.body.join('\n')))
 }

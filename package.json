@@ -50,17 +50,7 @@
           }
         }
       }
-    },
-    "snippets": [
-      {
-        "language": "typescriptreact",
-        "path": "./src/snippets/react.code-snippets"
-      },
-      {
-        "language": "typescript",
-        "path": "./src/snippets/react.code-snippets"
-      }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
