@@ -1,11 +1,6 @@
 import * as vscode from 'vscode'
 import { defaultSnippets } from '../snippets/defaults'
-
-interface CustomSnippet {
-  name: string
-  prefix: string
-  body: string[]
-}
+import { CustomSnippet } from '../types'
 
 export function registerSnippetCompletion(context: vscode.ExtensionContext) {
   const provider = vscode.languages.registerCompletionItemProvider(

@@ -1,11 +1,6 @@
 import * as vscode from 'vscode'
 import { defaultSnippets } from '../snippets/defaults'
-
-interface CustomSnippet {
-  name: string
-  prefix: string
-  body: string[]
-}
+import { CustomSnippet } from '../types'
 
 export async function insertSnippet() {
   const editor = vscode.window.activeTextEditor
