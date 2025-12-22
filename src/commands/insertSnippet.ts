@@ -3,6 +3,7 @@ import { defaultSnippets } from '../snippets/defaults'
 
 interface CustomSnippet {
   name: string
+  prefix: string
   body: string[]
 }
 

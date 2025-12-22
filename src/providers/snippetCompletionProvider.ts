@@ -1,31 +1,51 @@
 import * as vscode from 'vscode'
 import { defaultSnippets } from '../snippets/defaults'
 
+interface CustomSnippet {
+  name: string
+  prefix: string
+  body: string[]
+}
+
 export function registerSnippetCompletion(context: vscode.ExtensionContext) {
   const provider = vscode.languages.registerCompletionItemProvider(
     ['typescript', 'typescriptreact', 'javascript', 'javascriptreact'],
     {
       provideCompletionItems(document, position) {
-        const linePrefix = document
-          .lineAt(position)
-          .text.substring(0, position.character)
+        const line = document.lineAt(position)
+        const linePrefix = line.text.substring(0, position.character)
 
-        if (!linePrefix.includes('!')) return []
+        const bangIndex = linePrefix.lastIndexOf('!')
+        if (bangIndex === -1) return []
 
-        return defaultSnippets.map((snippet) => {
+        const range = new vscode.Range(
+          position.line,
+          bangIndex,
+          position.line,
+          position.character
+        )
+
+        const config = vscode.workspace.getConfiguration('devShortcuts')
+        const customSnippets =
+          config.get<CustomSnippet[]>('customSnippets') || []
+
+        const allSnippets = [...defaultSnippets, ...customSnippets]
+
+        return allSnippets.map((snippet) => {
           const item = new vscode.CompletionItem(
             snippet.prefix,
             vscode.CompletionItemKind.Snippet
           )
 
-          item.detail = snippet.name
+          item.detail = 'Dev Shortcuts'
+          item.range = range
           item.insertText = new vscode.SnippetString(snippet.body.join('\n'))
 
           return item
         })
       }
     },
-    '!' // caractere trigger
+    '!'
   )
 
   context.subscriptions.push(provider)
