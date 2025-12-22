@@ -6,6 +6,7 @@ export const defaultSnippets: CustomSnippet[] = [
     name: 'React Component',
     prefix: '!component',
     description: 'Cria um componente React com interface de props',
+    source: 'Default',
     body: [
       'interface I${1:Component}Props {}',
       '',
@@ -23,6 +24,7 @@ export const defaultSnippets: CustomSnippet[] = [
     name: 'React Page',
     prefix: '!page',
     description: 'Cria uma página React básica',
+    source: 'Default',
     body: [
       'export default function ${1:Page}() {',
       '  return (',
@@ -38,6 +40,7 @@ export const defaultSnippets: CustomSnippet[] = [
     name: 'React Hook',
     prefix: '!hook',
     description: 'Cria um hook React com useState',
+    source: 'Default',
     body: [
       "import { useState } from 'react'",
       '',

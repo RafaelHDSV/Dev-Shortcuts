@@ -7,7 +7,7 @@ export interface CustomSnippet {
   name: string
   prefix: string
   body: string[]
-  source: SnippetSource
+  source?: SnippetSource
   description?: string
 }
 
