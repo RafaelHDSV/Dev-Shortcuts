@@ -17,17 +17,48 @@
     "commands": [
       {
         "command": "extension.devShortcuts",
-        "title": "Dev Shortcuts"
+        "title": "Dev Shortcuts: Inserir snippet"
       }
     ],
+    "configuration": {
+      "title": "Dev Shortcuts",
+      "properties": {
+        "devShortcuts.customSnippets": {
+          "type": "array",
+          "default": [],
+          "description": "Snippets customizados do Dev Shortcuts",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "prefix": {
+                "type": "string"
+              },
+              "body": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "body"
+            ]
+          }
+        }
+      }
+    },
     "snippets": [
       {
         "language": "typescriptreact",
-        "path": "./snippets/react.code-snippets"
+        "path": "./src/snippets/react.code-snippets"
       },
       {
         "language": "typescript",
-        "path": "./snippets/react.code-snippets"
+        "path": "./src/snippets/react.code-snippets"
       }
     ]
   },
