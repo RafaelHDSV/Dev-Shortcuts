@@ -32,7 +32,11 @@ export function registerSnippetCompletion(context: vscode.ExtensionContext) {
             vscode.CompletionItemKind.Snippet
           )
 
-          item.detail = 'Dev Shortcuts'
+          item.detail = snippet.name
+          item.documentation = snippet.description
+            ? new vscode.MarkdownString(snippet.description)
+            : undefined
+
           item.range = range
           item.insertText = new vscode.SnippetString(snippet.body.join('\n'))
 

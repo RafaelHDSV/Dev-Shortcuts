@@ -9,19 +9,15 @@ export async function insertSnippet() {
   const config = vscode.workspace.getConfiguration('devShortcuts')
   const customSnippets = config.get<CustomSnippet[]>('customSnippets') || []
 
-  const allSnippets: {
-    label: string
-    description: string
-    body: string[]
-  }[] = [
+  const allSnippets = [
     ...defaultSnippets.map((s) => ({
       label: s.name,
-      description: 'Default',
+      description: s.description,
       body: s.body
     })),
     ...customSnippets.map((s) => ({
       label: s.name,
-      description: 'Custom',
+      description: s.description ?? 'Snippet customizado',
       body: s.body
     }))
   ]
