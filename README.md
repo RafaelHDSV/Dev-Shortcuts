@@ -1,27 +1,20 @@
-# Hello World Sample
+# dev-shortcuts
 
-This is a Hello World example that shows you how to use VS Code API.
+> Projeto gerado / complementado com Vieira CLI.
 
-Guide for this sample: https://code.visualstudio.com/api/get-started/your-first-extension.
+## Visao geral
 
-## Demo
+Descreva aqui o objetivo do projeto, contexto e principais funcionalidades.
 
-![demo](demo.gif)
+Contexto para IA: edite **`docs/context.md`**. Especificacao de produto do app: edite **`docs/especificacao.md`** (guia minimo, nao epic do board Vieira). Gerado automaticamente pelos comandos `vieira front`, `vieira full`, `vieira extension` e `vieira common`.
 
-## VS Code API
+## Setup
 
-### `vscode` module
+```bash
+# Instalacao
+# Comandos de execucao
+```
 
-- [`commands.registerCommand`](https://code.visualstudio.com/api/references/vscode-api#commands.registerCommand)
-- [`window.showInformationMessage`](https://code.visualstudio.com/api/references/vscode-api#window.showInformationMessage)
+## Licenca
 
-### Contribution Points
-
-- [`contributes.commands`](https://code.visualstudio.com/api/references/contribution-points#contributes.commands)
-
-## Running the Sample
-
-- Run `npm install` in terminal to install dependencies
-- Run the `Run Extension` target in the Debug View. This will:
-	- Start a task `npm: watch` to compile the code
-	- Run the extension in a new VS Code window
+MIT (c) 2026 Rafael Vieira. Veja [LICENSE](./LICENSE).
