@@ -1,36 +1,56 @@
-import * as vscode from 'vscode'
-import { defaultSnippets } from '../snippets/defaults'
-import { CustomSnippet, SnippetQuickPickItem } from '../types'
+import * as vscode from 'vscode';
+import { SnippetStore } from '../storage/snippetStore';
+import { applyImports } from '../import/importResolver';
+import { Snippet } from '../types';
 
-export async function insertSnippet() {
-  const editor = vscode.window.activeTextEditor
-  if (!editor) return
+interface SnippetQuickPickItem extends vscode.QuickPickItem {
+  snippet: Snippet
+}
 
-  const config = vscode.workspace.getConfiguration('devShortcuts')
-  const customSnippets = config.get<CustomSnippet[]>('customSnippets') || []
+export function createInsertSnippetCommand(store: SnippetStore) {
+  return async function insertSnippet(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage(
+        'Open an editor to insert a Dev Shortcuts snippet.'
+      );
+      return;
+    }
 
-  const items: SnippetQuickPickItem[] = [
-    ...defaultSnippets.map((s) => ({
-      label: s.name,
-      description: s.source || 'Default',
-      detail: s.description,
-      body: s.body,
-      source: s.source || 'Default'
-    })),
-    ...customSnippets.map((s) => ({
-      label: s.name,
-      description: s.source || 'Custom',
-      detail: s.description ?? 'Snippet customizado',
-      body: s.body,
-      source: s.source || 'Custom'
-    }))
-  ]
+    const snippets = store.getAll();
+    if (snippets.length === 0) {
+      const open = await vscode.window.showInformationMessage(
+        'You have no snippets yet. Open the Dev Shortcuts manager to create one.',
+        'Manage snippets'
+      );
+      if (open) {
+        await vscode.commands.executeCommand('devShortcuts.openManager');
+      }
+      return;
+    }
 
-  const selected = await vscode.window.showQuickPick(items, {
-    placeHolder: 'Selecione um snippet do Dev Shortcuts'
-  })
+    const items: SnippetQuickPickItem[] = snippets
+      .slice()
+      .sort((a, b) => a.prefix.localeCompare(b.prefix))
+      .map((snippet) => ({
+        label: snippet.prefix,
+        description: snippet.name,
+        detail: snippet.description,
+        snippet
+      }));
 
-  if (!selected || !selected.body) return
+    const picked = await vscode.window.showQuickPick(items, {
+      placeHolder: 'Select a Dev Shortcuts snippet to insert',
+      matchOnDescription: true,
+      matchOnDetail: true
+    });
+    if (!picked) {return;}
 
-  editor.insertSnippet(new vscode.SnippetString(selected.body.join('\n')))
+    if (picked.snippet.imports && picked.snippet.imports.length > 0) {
+      await applyImports(editor, picked.snippet.imports);
+    }
+    await editor.insertSnippet(
+      new vscode.SnippetString(picked.snippet.body.join('\n'))
+    );
+  };
 }

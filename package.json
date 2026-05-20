@@ -1,67 +1,95 @@
 {
   "name": "dev-shortcuts",
-  "displayName": "dev-shortcuts",
-  "description": "Dev Shortcuts example for VS Code",
-  "version": "1.0.0",
-  "publisher": "rafael-vieira",
-  "repository": "https://github.com/RafaelHDSV/Dev-Shortcuts",
+  "displayName": "Dev Shortcuts",
+  "description": "User-owned snippet shortcuts triggered by the \"!\" prefix in any language.",
+  "version": "0.1.0",
+  "publisher": "RafaelVieira1720",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RafaelHDSV/Dev-Shortcuts"
+  },
   "engines": {
     "vscode": "^1.100.0"
   },
   "categories": [
+    "Snippets",
     "Other"
   ],
+  "keywords": [
+    "snippets",
+    "shortcuts",
+    "productivity",
+    "boilerplate"
+  ],
   "activationEvents": [
-    "onLanguage:typescript",
-    "onLanguage:typescriptreact",
-    "onLanguage:javascript",
-    "onLanguage:javascriptreact"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "extension.devShortcuts",
-        "title": "Dev Shortcuts: Inserir snippet"
+        "command": "devShortcuts.openManager",
+        "title": "Manage snippets",
+        "category": "Dev Shortcuts"
+      },
+      {
+        "command": "devShortcuts.insert",
+        "title": "Insert snippet...",
+        "category": "Dev Shortcuts"
+      },
+      {
+        "command": "devShortcuts.export",
+        "title": "Export snippets...",
+        "category": "Dev Shortcuts"
+      },
+      {
+        "command": "devShortcuts.import",
+        "title": "Import snippets...",
+        "category": "Dev Shortcuts"
       }
     ],
-    "configuration": {
-      "title": "Dev Shortcuts",
-      "properties": {
-        "devShortcuts.customSnippets": {
-          "type": "array",
-          "default": [],
-          "description": "Snippets customizados do Dev Shortcuts",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "prefix": {
-                "type": "string"
-              },
-              "body": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "required": [
-              "name",
-              "body"
-            ]
-          }
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devShortcuts",
+          "title": "Dev Shortcuts",
+          "icon": "media/activitybar.svg"
         }
-      }
+      ]
+    },
+    "views": {
+      "devShortcuts": [
+        {
+          "type": "webview",
+          "id": "devShortcuts.snippetManager",
+          "name": "Snippets",
+          "contextualTitle": "Dev Shortcuts"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "devShortcuts.openManager"
+        },
+        {
+          "command": "devShortcuts.insert"
+        },
+        {
+          "command": "devShortcuts.export"
+        },
+        {
+          "command": "devShortcuts.import"
+        }
+      ]
     }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "lint": "eslint",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
