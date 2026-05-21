@@ -1,6 +1,6 @@
 # Dev Shortcuts
 
-![Demo](demo.gif)
+![Demo](demo.mp4)
 
 User-owned snippet shortcuts for VS Code and Cursor, triggered by the `!` prefix in **any** language.
 
