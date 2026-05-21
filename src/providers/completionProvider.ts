@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { SnippetStore } from '../storage/snippetStore';
 import { applyImports } from '../import/importResolver';
+import { setLastSnippetId } from '../storage/lastSnippet';
 import { Snippet } from '../types';
 
-const APPLY_IMPORTS_COMMAND = 'devShortcuts.internal.applyImports';
+const ON_SNIPPET_ACCEPTED = 'devShortcuts.internal.onSnippetAccepted';
 
 export function registerCompletionProvider(
   context: vscode.ExtensionContext,
@@ -11,12 +12,17 @@ export function registerCompletionProvider(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      APPLY_IMPORTS_COMMAND,
+      ON_SNIPPET_ACCEPTED,
       async (snippetId: string) => {
         const snippet = store.getById(snippetId);
         const editor = vscode.window.activeTextEditor;
-        if (!snippet || !editor || !snippet.imports?.length) {return;}
-        await applyImports(editor, snippet.imports);
+        if (!snippet || !editor) {
+          return;
+        }
+        if (snippet.imports?.length) {
+          await applyImports(editor, snippet.imports);
+        }
+        await setLastSnippetId(context, snippet.id);
       }
     )
   );
@@ -75,13 +81,11 @@ class SnippetCompletionItemProvider
     item.filterText = snippet.prefix;
     item.sortText = snippet.prefix;
 
-    if (snippet.imports && snippet.imports.length > 0) {
-      item.command = {
-        command: APPLY_IMPORTS_COMMAND,
-        title: 'Apply Dev Shortcuts imports',
-        arguments: [snippet.id]
-      };
-    }
+    item.command = {
+      command: ON_SNIPPET_ACCEPTED,
+      title: 'Prepare Dev Shortcuts snippet',
+      arguments: [snippet.id]
+    };
 
     return item;
   }

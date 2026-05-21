@@ -57,3 +57,17 @@ Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 - [ ] Nenhum snippet "Default" (`React Component`, `React Page`, `React Hook`) aparece no quick pick ou na completion.
 - [ ] Itens custom NAO aparecem com tag `Deprecated`.
 - [ ] `settings.json` nao tem mais a chave `devShortcuts.customSnippets` exigida (a antiga foi removida do contributes).
+
+## Pos-MVP (v0.2.0)
+
+- [ ] Aba **Suggestions**: filtrar React / Generic; **Add to library** adiciona sem ativar em completion ate salvar na biblioteca.
+- [ ] Prefixo duplicado ao adicionar sugestao: oferece renomear (`!rus2`, etc.).
+- [ ] **Live preview** atualiza ao digitar body (`${1:foo}`, `$0` destacados).
+- [ ] Dicas aparecem no topo; **Dismiss** remove e nao volta apos recarregar webview.
+- [ ] Welcome na primeira execucao (biblioteca vazia); **Got it** nao reaparece.
+- [ ] `Ctrl+Alt+S` / `Cmd+Alt+S` abre quick pick de insercao.
+- [ ] `Ctrl+Alt+Shift+S` reinsere ultimo snippet usado.
+- [ ] `Ctrl+Alt+M` foca o manager.
+- [ ] Comando **Add suggested snippet...** na paleta funciona.
+- [ ] Dedup JS: `import { useState } from 'react'` nao duplica se `useState` ja importado do mesmo modulo.
+- [ ] Dedup Go: `import "fmt"` nao duplica.

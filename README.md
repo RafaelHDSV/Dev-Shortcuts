@@ -11,6 +11,11 @@ Instead of memorizing fixed snippet packs, you build your own library: every sni
 - **Auto imports**: declare import lines per snippet; missing ones are inserted at the top of the file (best-effort dedup for JS/TS/Python).
 - **Activity Bar manager**: dedicated sidebar with a webview for creating, editing, and deleting snippets without touching `settings.json`.
 - **Import / Export JSON**: back up or share your library; duplicate prefixes can be skipped, overwritten, or renamed on import.
+- **Suggestions gallery** (opt-in): React and generic templates you add to your library — never auto-loaded into completion.
+- **Live preview**: tab stops and placeholders highlighted while editing a snippet body.
+- **Usage tips**: dismissible in-app tips (local only, no telemetry).
+- **Default keybindings**: quick access to insert, repeat last snippet, and open the manager (rebindable in Keyboard Shortcuts).
+- **Smarter import dedup**: JS/TS named imports, plus Go, Rust, Java/Kotlin, and C# `using` lines.
 - **Local-only**: snippets are stored in the extension's global storage; no telemetry, no network calls.
 
 ## Quick start
@@ -32,6 +37,18 @@ Instead of memorizing fixed snippet packs, you build your own library: every sni
 | `Dev Shortcuts: Insert snippet...` | Quick pick to insert a snippet without typing `!` |
 | `Dev Shortcuts: Export snippets...` | Saves your library to a JSON file |
 | `Dev Shortcuts: Import snippets...` | Loads snippets from JSON, with duplicate handling |
+| `Dev Shortcuts: Add suggested snippet...` | Quick pick from the opt-in suggestion catalog |
+| `Dev Shortcuts: Insert last used snippet` | Re-inserts the most recently used snippet |
+
+## Keyboard shortcuts (default)
+
+| Shortcut (Windows/Linux) | macOS | Action |
+|--------------------------|-------|--------|
+| `Ctrl+Alt+S` | `Cmd+Alt+S` | Insert snippet... |
+| `Ctrl+Alt+Shift+S` | `Cmd+Alt+Shift+S` | Insert last used snippet |
+| `Ctrl+Alt+M` | `Cmd+Alt+M` | Open snippet manager |
+
+Rebind under **Preferences → Keyboard Shortcuts** (search for "Dev Shortcuts").
 
 ## Snippet JSON format
 
@@ -80,12 +97,9 @@ npm run compile
 # Press F5 in VS Code to launch the Extension Development Host
 ```
 
-## Roadmap (post-MVP)
+## Suggestions
 
-- Optional gallery of suggested snippets (React + generic).
-- AST-based import resolution for more languages.
-- Snippet preview with simulated tab stops in the manager.
-- Optional default keybinding.
+Open the **Suggestions** tab in the Activity Bar manager. Categories: **React** and **Generic**. Click **Add to library** to copy a template into your personal store (prefixes remain editable).
 
 ## License
 

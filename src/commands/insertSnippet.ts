@@ -2,12 +2,16 @@ import * as vscode from 'vscode';
 import { SnippetStore } from '../storage/snippetStore';
 import { applyImports } from '../import/importResolver';
 import { Snippet } from '../types';
+import { setLastSnippetId } from '../storage/lastSnippet';
 
 interface SnippetQuickPickItem extends vscode.QuickPickItem {
   snippet: Snippet
 }
 
-export function createInsertSnippetCommand(store: SnippetStore) {
+export function createInsertSnippetCommand(
+  context: vscode.ExtensionContext,
+  store: SnippetStore
+) {
   return async function insertSnippet(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -52,5 +56,6 @@ export function createInsertSnippetCommand(store: SnippetStore) {
     await editor.insertSnippet(
       new vscode.SnippetString(picked.snippet.body.join('\n'))
     );
+    await setLastSnippetId(context, picked.snippet.id);
   };
 }

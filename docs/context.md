@@ -80,10 +80,18 @@ src/
 
 ---
 
-## Fora de escopo (MVP)
+## Pos-MVP (v0.2.0)
+
+- Galeria de sugestoes opt-in (`src/snippets/suggestions.ts`) — React + generic.
+- Preview ao vivo na webview (tab stops destacados).
+- Dicas locais dismissiveis (`src/utils/usageTips.ts`).
+- Atalhos padrao + `devShortcuts.insertLast`.
+- Import resolver ampliado (Go, Rust, Java, C#, named imports JS/TS).
+
+## Fora de escopo
 
 - Snippets por workspace ou projeto.
-- Galeria de sugestoes embutidas.
+- AST completo / path aliases para imports.
 - Testes automatizados (`@vscode/test-electron`).
 - Telemetria ou sincronizacao em nuvem.
 

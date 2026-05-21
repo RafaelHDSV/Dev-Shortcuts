@@ -2,7 +2,7 @@
   "name": "dev-shortcuts",
   "displayName": "Dev Shortcuts",
   "description": "User-owned snippet shortcuts triggered by the \"!\" prefix in any language.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "RafaelVieira1720",
   "license": "MIT",
   "repository": {
@@ -20,7 +20,8 @@
     "snippets",
     "shortcuts",
     "productivity",
-    "boilerplate"
+    "boilerplate",
+    "react"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -39,6 +40,11 @@
         "category": "Dev Shortcuts"
       },
       {
+        "command": "devShortcuts.insertLast",
+        "title": "Insert last used snippet",
+        "category": "Dev Shortcuts"
+      },
+      {
         "command": "devShortcuts.export",
         "title": "Export snippets...",
         "category": "Dev Shortcuts"
@@ -47,6 +53,30 @@
         "command": "devShortcuts.import",
         "title": "Import snippets...",
         "category": "Dev Shortcuts"
+      },
+      {
+        "command": "devShortcuts.addFromSuggestion",
+        "title": "Add suggested snippet...",
+        "category": "Dev Shortcuts"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "devShortcuts.insert",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devShortcuts.insertLast",
+        "key": "ctrl+alt+shift+s",
+        "mac": "cmd+alt+shift+s",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devShortcuts.openManager",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m"
       }
     ],
     "viewsContainers": {
@@ -77,10 +107,16 @@
           "command": "devShortcuts.insert"
         },
         {
+          "command": "devShortcuts.insertLast"
+        },
+        {
           "command": "devShortcuts.export"
         },
         {
           "command": "devShortcuts.import"
+        },
+        {
+          "command": "devShortcuts.addFromSuggestion"
         }
       ]
     }

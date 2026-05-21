@@ -4,6 +4,23 @@ All notable changes to **Dev Shortcuts** are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-05-20
+
+### Added
+
+- **Suggestions** tab in the manager: React + generic opt-in catalog (`!rfc`, `!rus`, `!fn`, `!tc`, ...).
+- Command `Dev Shortcuts: Add suggested snippet...` with duplicate-prefix handling.
+- **Live preview** in the editor form: highlights `${n:placeholder}`, `$n`, and `$0`.
+- **Usage tips** cards in the manager (dismissible, stored locally).
+- Welcome panel on first run when the library is empty.
+- Command `Dev Shortcuts: Insert last used snippet` and tracking of the last inserted snippet.
+- Default keybindings: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M` manager (macOS uses `Cmd`).
+- Richer import deduplication: JS/TS named/default/namespace bindings; Go, Rust, Java/Kotlin, C# `using`.
+
+### Changed
+
+- Completion always runs a prepare step (imports + last-snippet tracking) when a suggestion is accepted.
+
 ## [0.1.0] - 2026-05-20
 
 ### Added
