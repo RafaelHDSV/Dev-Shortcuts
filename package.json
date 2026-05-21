@@ -2,8 +2,9 @@
   "name": "dev-shortcuts",
   "displayName": "Dev Shortcuts",
   "description": "User-owned snippet shortcuts triggered by the \"!\" prefix in any language.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "RafaelVieira1720",
+  "icon": "media/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -126,7 +127,9 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint"
+    "lint": "eslint",
+    "media:gif": "powershell -ExecutionPolicy Bypass -File scripts/generate-demo-gif.ps1",
+    "media:icon": "powershell -ExecutionPolicy Bypass -File scripts/generate-icon.ps1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

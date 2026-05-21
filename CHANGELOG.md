@@ -4,7 +4,16 @@ All notable changes to **Dev Shortcuts** are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] - 2026-05-21
+
+### Added
+
+- Marketplace / Open VSX extension icon (`media/icon.png`, 128×128).
+- `media/demo.gif` for README and Marketplace (generated from `demo.mp4`).
+
+### Fixed
+
+- Extension listing logo missing: `package.json` now sets `"icon": "media/icon.png"` (required by VS Code Marketplace and Open VSX; SVG activity bar icon alone is not used for store listings).
 
 ## [1.0.0] - 2026-05-21
 

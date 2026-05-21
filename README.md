@@ -1,10 +1,11 @@
 # Dev Shortcuts
 
-[![Demo](demo.mp4)](https://github.com/user-attachments/assets/8c57d8f5-c514-47e1-acb5-3ca5629eff71)
-
 User-owned snippet shortcuts for VS Code and Cursor, triggered by the `!` prefix in **any** language.
 
 Instead of memorizing fixed snippet packs, you build your own library: every snippet is created, edited, and stored by you, and shows up whenever you type `!` in an editor.
+
+![Dev Shortcuts — type ! for snippet completion, manage snippets in the Activity Bar](https://raw.githubusercontent.com/RafaelHDSV/Dev-Shortcuts/main/media/demo.gif)
+
 
 ## Features
 
