@@ -2,7 +2,7 @@
 
 Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 
-**Ultima validacao release:** **v1.0.0** — executar checklist completo no F5 antes de publicar VSIX no Marketplace / Open VSX.
+**Ultima validacao release:** **v1.0.1** — executar checklist completo no F5 antes de publicar VSIX no Marketplace / Open VSX.
 
 ## Preparacao
 

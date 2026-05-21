@@ -2,7 +2,7 @@
 
 > Contexto primario para assistentes de IA (regra `ai-context.mdc`). Atualize este arquivo ao evoluir o produto.
 
-**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Versao:** 1.0.0 | **Ano:** 2026
+**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Versao:** 1.0.1 | **Ano:** 2026
 
 ---
 
@@ -98,7 +98,8 @@ Atalhos padrao: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M
 | 0.1.0 | MVP: store JSON, webview CRUD, completion `!`, import/export |
 | 0.2.0 | Suggestions, insertLast, keybindings, dedup ampliado, live preview |
 | 0.2.1 | Polish: docs, sem onboarding na UI, VSIX publish docs |
-| **1.0.0** | **Release estavel** para Marketplace e Open VSX |
+| **1.0.0** | Release estavel para Marketplace e Open VSX |
+| **1.0.1** | Icone PNG na listagem; demo.gif no README |
 
 ## Fora de escopo
 
@@ -109,4 +110,4 @@ Atalhos padrao: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M
 
 ---
 
-*Atualizado para release **1.0.0**.*
+*Atualizado para release **1.0.1**.*
