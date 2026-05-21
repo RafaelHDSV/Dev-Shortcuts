@@ -1,18 +1,18 @@
-import * as vscode from 'vscode';
-import { randomUUID } from 'crypto';
-import { SnippetStore } from '../storage/snippetStore';
-import { validateSnippet } from '../validation/snippetValidator';
-import { addSuggestionToStore } from '../commands/addFromSuggestion';
-import { SUGGESTION_CATALOG } from '../snippets/suggestions';
+import { randomUUID } from 'crypto'
+import * as vscode from 'vscode'
+import { addSuggestionToStore } from '../commands/addFromSuggestion'
+import { SUGGESTION_CATALOG } from '../snippets/suggestions'
+import { SnippetStore } from '../storage/snippetStore'
+import { Snippet } from '../types'
 import {
   dismissTip,
   getActiveTips,
   hasSeenWelcome,
   markWelcomeSeen
-} from '../utils/usageTips';
-import { Snippet } from '../types';
+} from '../utils/usageTips'
+import { validateSnippet } from '../validation/snippetValidator'
 
-export const VIEW_ID = 'devShortcuts.snippetManager';
+export const VIEW_ID = 'devShortcuts.snippetManager'
 
 type WebviewInbound =
   | { type: 'ready' }
@@ -23,30 +23,39 @@ type WebviewInbound =
   | { type: 'import' }
   | { type: 'addSuggestion'; catalogId: string }
   | { type: 'dismissTip'; tipId: string }
-  | { type: 'dismissWelcome' };
+  | { type: 'dismissWelcome' }
 
 type WebviewOutbound =
-  | { type: 'init'; snippets: Snippet[]; suggestions: typeof SUGGESTION_CATALOG; tips: ReturnType<typeof getActiveTips>; showWelcome: boolean }
+  | {
+      type: 'init'
+      snippets: Snippet[]
+      suggestions: typeof SUGGESTION_CATALOG
+      tips: ReturnType<typeof getActiveTips>
+      showWelcome: boolean
+    }
   | { type: 'snippets'; data: Snippet[] }
   | { type: 'tips'; data: ReturnType<typeof getActiveTips> }
   | { type: 'saved'; id: string }
-  | { type: 'snippetLinked'; catalogId: string; snippetId: string; prefix: string }
+  | {
+      type: 'snippetLinked'
+      catalogId: string
+      snippetId: string
+      prefix: string
+    }
   | { type: 'validationError'; field: string; message: string }
-  | { type: 'info'; message: string };
+  | { type: 'info'; message: string }
 
 interface SnippetDraft {
-  id?: string;
-  name: string;
-  prefix: string;
-  body: string;
-  imports?: string;
-  description?: string;
+  id?: string
+  name: string
+  prefix: string
+  body: string
+  imports?: string
+  description?: string
 }
 
-export class SnippetManagerViewProvider
-  implements vscode.WebviewViewProvider
-{
-  private view?: vscode.WebviewView;
+export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
+  private view?: vscode.WebviewView
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -54,48 +63,48 @@ export class SnippetManagerViewProvider
   ) {
     this.context.subscriptions.push(
       this.store.onDidChange(() => {
-        this.pushSnippets();
+        this.pushSnippets()
       })
-    );
+    )
   }
 
   resolveWebviewView(view: vscode.WebviewView): void {
-    this.view = view;
+    this.view = view
     view.webview.options = {
       enableScripts: true,
       localResourceRoots: [this.context.extensionUri]
-    };
+    }
 
     view.webview.onDidReceiveMessage((msg: WebviewInbound) => {
       void this.handleMessage(msg).catch((err) => {
-        console.error('[Dev Shortcuts] webview message failed:', err);
+        console.error('[Dev Shortcuts] webview message failed:', err)
         this.post({
           type: 'info',
           message: 'Something went wrong. Try reopening the Dev Shortcuts view.'
-        });
-      });
-    });
+        })
+      })
+    })
 
-    view.webview.html = renderHtml(view.webview);
+    view.webview.html = renderHtml(view.webview)
 
     view.onDidChangeVisibility(() => {
       if (view.visible) {
-        this.pushInit();
+        this.pushInit()
       }
-    });
+    })
 
     view.onDidDispose(() => {
-      this.view = undefined;
-    });
+      this.view = undefined
+    })
 
-    queueMicrotask(() => this.pushInit());
+    queueMicrotask(() => this.pushInit())
   }
 
   reveal(): void {
     if (this.view) {
-      this.view.show?.(true);
+      this.view.show?.(true)
     } else {
-      vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+      vscode.commands.executeCommand(`${VIEW_ID}.focus`)
     }
   }
 
@@ -103,58 +112,58 @@ export class SnippetManagerViewProvider
     switch (msg.type) {
       case 'ready':
       case 'requestInit':
-        this.pushInit();
-        return;
+        this.pushInit()
+        return
       case 'save':
-        await this.saveSnippet(msg.snippet);
-        return;
+        await this.saveSnippet(msg.snippet)
+        return
       case 'delete':
-        await this.store.remove(msg.id);
-        return;
+        await this.store.remove(msg.id)
+        return
       case 'export':
-        await vscode.commands.executeCommand('devShortcuts.export');
-        return;
+        await vscode.commands.executeCommand('devShortcuts.export')
+        return
       case 'import':
-        await vscode.commands.executeCommand('devShortcuts.import');
-        return;
+        await vscode.commands.executeCommand('devShortcuts.import')
+        return
       case 'addSuggestion': {
         const item = SUGGESTION_CATALOG.find(
           (s) => s.catalogId === msg.catalogId
-        );
+        )
         if (item) {
           const saved = await addSuggestionToStore(this.store, item, {
             silentRename: true
-          });
+          })
           if (saved) {
             this.post({
               type: 'snippetLinked',
               catalogId: item.catalogId,
               snippetId: saved.id,
               prefix: saved.prefix
-            });
+            })
             this.post({
               type: 'info',
               message: `Added "${item.name}" as ${saved.prefix}.`
-            });
+            })
           }
         }
-        return;
+        return
       }
       case 'dismissTip':
-        await dismissTip(this.context, msg.tipId);
-        this.pushTips();
-        return;
+        await dismissTip(this.context, msg.tipId)
+        this.pushTips()
+        return
       case 'dismissWelcome':
-        await markWelcomeSeen(this.context);
-        return;
+        await markWelcomeSeen(this.context)
+        return
     }
   }
 
   private async saveSnippet(draft: SnippetDraft): Promise<void> {
-    const body = splitLines(draft.body);
+    const body = splitLines(draft.body)
     const imports = draft.imports
       ? splitLines(draft.imports).filter((l) => l.trim().length > 0)
-      : undefined;
+      : undefined
 
     const candidate = {
       id: draft.id,
@@ -163,20 +172,16 @@ export class SnippetManagerViewProvider
       body,
       imports: imports && imports.length > 0 ? imports : undefined,
       description: (draft.description ?? '').trim() || undefined
-    };
+    }
 
-    const result = validateSnippet(
-      candidate,
-      this.store.getAll(),
-      draft.id
-    );
+    const result = validateSnippet(candidate, this.store.getAll(), draft.id)
     if (!result.ok) {
       this.post({
         type: 'validationError',
         field: result.field,
         message: result.message
-      });
-      return;
+      })
+      return
     }
 
     const saved = await this.store.upsert({
@@ -186,9 +191,9 @@ export class SnippetManagerViewProvider
       body: candidate.body,
       imports: candidate.imports,
       description: candidate.description
-    });
+    })
 
-    this.post({ type: 'saved', id: saved.id });
+    this.post({ type: 'saved', id: saved.id })
   }
 
   private pushInit(): void {
@@ -198,37 +203,37 @@ export class SnippetManagerViewProvider
       suggestions: SUGGESTION_CATALOG,
       tips: getActiveTips(this.context),
       showWelcome: !hasSeenWelcome(this.context)
-    });
+    })
   }
 
   private pushSnippets(): void {
-    this.post({ type: 'snippets', data: this.store.getAll() });
+    this.post({ type: 'snippets', data: this.store.getAll() })
   }
 
   private pushTips(): void {
-    this.post({ type: 'tips', data: getActiveTips(this.context) });
+    this.post({ type: 'tips', data: getActiveTips(this.context) })
   }
 
   private post(message: WebviewOutbound): void {
-    this.view?.webview.postMessage(message);
+    this.view?.webview.postMessage(message)
   }
 }
 
 function splitLines(text: string): string[] {
   if (!text) {
-    return [];
+    return []
   }
-  return text.replace(/\r\n/g, '\n').split('\n');
+  return text.replace(/\r\n/g, '\n').split('\n')
 }
 
 function renderHtml(webview: vscode.Webview): string {
-  const nonce = generateNonce();
+  const nonce = generateNonce()
   const csp = [
     "default-src 'none'",
     `style-src ${webview.cspSource} 'unsafe-inline'`,
     `script-src 'nonce-${nonce}'`,
     `img-src ${webview.cspSource} https: data:`
-  ].join('; ');
+  ].join('; ')
 
   return /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -285,7 +290,7 @@ function renderHtml(webview: vscode.Webview): string {
   button.danger { background: var(--vscode-errorForeground); color: var(--vscode-button-foreground); }
   button.small { padding: 2px 8px; font-size: 0.85em; }
   .list-scroll {
-    max-height: 112px;
+    max-height: 212px;
     overflow-y: auto;
     margin-bottom: 8px;
     border: 1px solid var(--vscode-panel-border);
@@ -880,9 +885,9 @@ function renderHtml(webview: vscode.Webview): string {
     })();
   </script>
 </body>
-</html>`;
+</html>`
 }
 
 function generateNonce(): string {
-  return randomUUID().replace(/-/g, '');
+  return randomUUID().replace(/-/g, '')
 }
