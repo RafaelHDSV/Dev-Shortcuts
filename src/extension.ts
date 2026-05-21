@@ -9,10 +9,12 @@ import {
 } from './commands/importExport';
 import { createAddFromSuggestionCommand } from './commands/addFromSuggestion';
 import { createInsertLastSnippetCommand } from './commands/insertLastSnippet';
+import { createResetOnboardingCommand } from './commands/resetOnboarding';
 import {
   SnippetManagerViewProvider,
   VIEW_ID
 } from './views/snippetManagerView';
+import { isDevExtension } from './utils/devMode';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -53,6 +55,15 @@ export async function activate(
       createAddFromSuggestionCommand(store)
     )
   );
+
+  if (isDevExtension(context)) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        'devShortcuts.resetOnboarding',
+        createResetOnboardingCommand(context, viewProvider)
+      )
+    );
+  }
 }
 
 export function deactivate(): void {

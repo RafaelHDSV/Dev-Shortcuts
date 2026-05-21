@@ -2,6 +2,13 @@
 
 Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 
+## Reset onboarding (somente F5 / Extension Development)
+
+- [ ] Com F5, na toolbar da Library aparece **Reset onboarding** (borda tracejada).
+- [ ] Paleta: `Dev Shortcuts: Reset onboarding (dev only)` (se existir titulo via registro programatico).
+- [ ] Apos reset: Welcome + todas as dicas voltam; `snippets.json` permanece.
+- [ ] Instalacao normal (Marketplace): botao e comando **nao** aparecem.
+
 ## Preparacao
 
 - [ ] `npm install`

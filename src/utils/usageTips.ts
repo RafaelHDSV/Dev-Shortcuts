@@ -72,3 +72,11 @@ export async function markWelcomeSeen(
 ): Promise<void> {
   await context.globalState.update(WELCOME_SEEN_KEY, true);
 }
+
+/** Clears welcome + dismissed tips so onboarding shows again (dev testing). */
+export async function resetOnboarding(
+  context: vscode.ExtensionContext
+): Promise<void> {
+  await context.globalState.update(WELCOME_SEEN_KEY, undefined);
+  await context.globalState.update(DISMISSED_KEY, undefined);
+}
