@@ -30,6 +30,7 @@ type WebviewOutbound =
   | { type: 'snippets'; data: Snippet[] }
   | { type: 'tips'; data: ReturnType<typeof getActiveTips> }
   | { type: 'saved'; id: string }
+  | { type: 'snippetLinked'; catalogId: string; snippetId: string; prefix: string }
   | { type: 'validationError'; field: string; message: string }
   | { type: 'info'; message: string };
 
@@ -121,11 +122,21 @@ export class SnippetManagerViewProvider
           (s) => s.catalogId === msg.catalogId
         );
         if (item) {
-          await addSuggestionToStore(this.store, item);
-          this.post({
-            type: 'info',
-            message: `Added "${item.name}" to your library.`
+          const saved = await addSuggestionToStore(this.store, item, {
+            silentRename: true
           });
+          if (saved) {
+            this.post({
+              type: 'snippetLinked',
+              catalogId: item.catalogId,
+              snippetId: saved.id,
+              prefix: saved.prefix
+            });
+            this.post({
+              type: 'info',
+              message: `Added "${item.name}" as ${saved.prefix}.`
+            });
+          }
         }
         return;
       }
@@ -273,22 +284,74 @@ function renderHtml(webview: vscode.Webview): string {
   button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
   button.danger { background: var(--vscode-errorForeground); color: var(--vscode-button-foreground); }
   button.small { padding: 2px 8px; font-size: 0.85em; }
-  ul.snippets, ul.suggestions { list-style: none; padding: 0; margin: 0 0 10px; }
-  ul.snippets li, ul.suggestions li {
-    padding: 6px 8px;
+  .list-scroll {
+    max-height: 112px;
+    overflow-y: auto;
+    margin-bottom: 8px;
     border: 1px solid var(--vscode-panel-border);
     border-radius: 3px;
-    margin-bottom: 4px;
+    flex-shrink: 0;
+  }
+  ul.snippets, ul.suggestions { list-style: none; padding: 0; margin: 0; }
+  ul.snippets li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 8px;
+    min-height: 26px;
+    border-bottom: 1px solid var(--vscode-panel-border);
     cursor: pointer;
   }
+  ul.snippets li:last-child { border-bottom: none; }
+  ul.snippets li:hover {
+    background: var(--vscode-list-hoverBackground);
+  }
   ul.snippets li.active {
-    border-color: var(--vscode-focusBorder);
     background: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);
   }
-  ul.suggestions li { cursor: default; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .meta .prefix { font-family: var(--vscode-editor-font-family); font-weight: 600; display: block; }
-  .meta .name { font-size: 0.85em; opacity: 0.85; }
+  ul.suggestions li {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+  }
+  ul.suggestions li:last-child { border-bottom: none; }
+  ul.suggestions li.active-suggestion {
+    background: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+  }
+  .snippet-row, .suggestion-row-main {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .snippet-prefix, .suggestion-prefix {
+    font-family: var(--vscode-editor-font-family);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .snippet-name, .suggestion-name {
+    font-size: 0.85em;
+    opacity: 0.85;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
+  .suggestion-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .library-editor { margin-top: 4px; }
   .badge {
     font-size: 0.7em;
     text-transform: uppercase;
@@ -385,9 +448,12 @@ function renderHtml(webview: vscode.Webview): string {
       <button type="button" id="import-btn" class="secondary">Import</button>
     </div>
     <h2>Your snippets</h2>
-    <ul id="snippet-list" class="snippets"></ul>
+    <div class="list-scroll">
+      <ul id="snippet-list" class="snippets"></ul>
+    </div>
     <div id="empty-state" class="empty" hidden>No snippets yet.</div>
 
+    <div class="library-editor">
     <h2 id="editor-title">New snippet</h2>
     <form id="editor">
       <input type="hidden" id="snippet-id" />
@@ -412,6 +478,7 @@ function renderHtml(webview: vscode.Webview): string {
       </div>
       <div id="status" class="status" aria-live="polite"></div>
     </form>
+    </div>
   </div>
 
   <div id="panel-suggestions" class="panel">
@@ -425,7 +492,11 @@ function renderHtml(webview: vscode.Webview): string {
         </select>
       </label>
     </div>
-    <ul id="suggestion-list" class="suggestions"></ul>
+    <div class="list-scroll">
+      <ul id="suggestion-list" class="suggestions"></ul>
+    </div>
+    <label>Live preview</label>
+    <div id="suggestion-preview" class="preview-box"><span class="end">Select a suggestion to preview</span></div>
   </div>
 
   <script nonce="${nonce}">
@@ -444,8 +515,11 @@ function renderHtml(webview: vscode.Webview): string {
       suggestions: [],
       tips: [],
       editingId: null,
+      selectedSuggestionCatalogId: null,
+      catalogLinks: {},
       tab: 'library'
     };
+    if (!state.catalogLinks) state.catalogLinks = {};
 
     const els = {
       welcome: document.getElementById('welcome'),
@@ -454,6 +528,7 @@ function renderHtml(webview: vscode.Webview): string {
       empty: document.getElementById('empty-state'),
       suggestionList: document.getElementById('suggestion-list'),
       suggestionFilter: document.getElementById('suggestion-filter'),
+      suggestionPreview: document.getElementById('suggestion-preview'),
       editor: document.getElementById('editor'),
       title: document.getElementById('editor-title'),
       id: document.getElementById('snippet-id'),
@@ -488,8 +563,50 @@ function renderHtml(webview: vscode.Webview): string {
       els.preview.innerHTML = renderSnippetPreview(els.body.value);
     }
 
+    function rebuildCatalogLinks() {
+      const next = {};
+      for (const [catalogId, snippetId] of Object.entries(state.catalogLinks || {})) {
+        if (state.snippets.some((s) => s.id === snippetId)) {
+          next[catalogId] = snippetId;
+        }
+      }
+      for (const cat of state.suggestions) {
+        if (next[cat.catalogId]) continue;
+        const match = state.snippets.find(
+          (s) => s.name === cat.name && (s.body || []).join(LINE_BREAK) === (cat.body || []).join(LINE_BREAK)
+        );
+        if (match) next[cat.catalogId] = match.id;
+      }
+      state.catalogLinks = next;
+    }
+
+    function getLinkedSnippet(catalogId) {
+      const id = state.catalogLinks[catalogId];
+      return id ? state.snippets.find((s) => s.id === id) : undefined;
+    }
+
+    function previewFromSuggestion(s) {
+      let html = renderSnippetPreview((s.body || []).join(LINE_BREAK));
+      if (s.imports && s.imports.length) {
+        html += '<div class="hint" style="margin-top:6px">Imports:</div>';
+        html += renderSnippetPreview(s.imports.join(LINE_BREAK));
+      }
+      if (s.description) {
+        html = '<div class="hint" style="margin-bottom:6px">' + escapeHtml(s.description) + '</div>' + html;
+      }
+      return html;
+    }
+
+    function selectSuggestion(s) {
+      state.selectedSuggestionCatalogId = s.catalogId;
+      els.suggestionPreview.innerHTML = previewFromSuggestion(s);
+      vscode.setState(state);
+      renderSuggestions();
+    }
+
     function setTab(name) {
       state.tab = name;
+      vscode.setState(state);
       document.querySelectorAll('.tab').forEach((t) => {
         t.classList.toggle('active', t.dataset.tab === name);
       });
@@ -524,6 +641,7 @@ function renderHtml(webview: vscode.Webview): string {
     function renderSuggestions() {
       const filter = els.suggestionFilter.value;
       els.suggestionList.innerHTML = '';
+      rebuildCatalogLinks();
       const items = state.suggestions.filter((s) =>
         filter === 'all' || s.category === filter
       );
@@ -535,21 +653,62 @@ function renderHtml(webview: vscode.Webview): string {
       }
       for (const s of items) {
         const li = document.createElement('li');
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        meta.innerHTML =
-          '<span class="prefix">' + escapeHtml(s.prefix) +
+        if (state.selectedSuggestionCatalogId === s.catalogId) {
+          li.classList.add('active-suggestion');
+        }
+        const main = document.createElement('div');
+        main.className = 'suggestion-row-main';
+        main.innerHTML =
+          '<span class="suggestion-prefix">' + escapeHtml(s.prefix) +
           '<span class="badge">' + escapeHtml(s.category) + '</span></span>' +
-          '<span class="name">' + escapeHtml(s.name) + '</span>';
-        const add = document.createElement('button');
-        add.type = 'button';
-        add.className = 'small';
-        add.textContent = 'Add to library';
-        add.addEventListener('click', () => {
-          vscode.postMessage({ type: 'addSuggestion', catalogId: s.catalogId });
+          '<span class="suggestion-name">' + escapeHtml(s.name) + '</span>';
+        main.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          selectSuggestion(s);
         });
-        li.appendChild(meta);
-        li.appendChild(add);
+        li.appendChild(main);
+
+        const actions = document.createElement('div');
+        actions.className = 'suggestion-actions';
+        const linked = getLinkedSnippet(s.catalogId);
+        if (linked) {
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'small secondary';
+          editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fillFromSnippet(linked);
+          });
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'small danger';
+          removeBtn.textContent = 'Remove';
+          removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            delete state.catalogLinks[s.catalogId];
+            vscode.setState(state);
+            vscode.postMessage({ type: 'delete', id: linked.id });
+            if (state.selectedSuggestionCatalogId === s.catalogId) {
+              els.suggestionPreview.innerHTML = '<span class="end">Select a suggestion to preview</span>';
+              state.selectedSuggestionCatalogId = null;
+            }
+            renderSuggestions();
+          });
+          actions.appendChild(editBtn);
+          actions.appendChild(removeBtn);
+        } else {
+          const add = document.createElement('button');
+          add.type = 'button';
+          add.className = 'small';
+          add.textContent = 'Add to library';
+          add.addEventListener('click', (e) => {
+            e.stopPropagation();
+            vscode.postMessage({ type: 'addSuggestion', catalogId: s.catalogId });
+          });
+          actions.appendChild(add);
+        }
+        li.appendChild(actions);
         els.suggestionList.appendChild(li);
       }
     }
@@ -576,6 +735,7 @@ function renderHtml(webview: vscode.Webview): string {
       els.deleteBtn.hidden = true;
       clearStatus();
       updatePreview();
+      vscode.setState(state);
       renderList();
     }
 
@@ -591,8 +751,17 @@ function renderHtml(webview: vscode.Webview): string {
       els.deleteBtn.hidden = false;
       clearStatus();
       updatePreview();
+      vscode.setState(state);
       renderList();
       setTab('library');
+    }
+
+    function onSnippetClick(snippet) {
+      if (snippet.id === state.editingId) {
+        resetForm();
+      } else {
+        fillFromSnippet(snippet);
+      }
     }
 
     function renderList() {
@@ -604,18 +773,29 @@ function renderHtml(webview: vscode.Webview): string {
       els.empty.hidden = true;
       for (const snippet of state.snippets) {
         const li = document.createElement('li');
-        if (snippet.id === state.editingId) li.classList.add('active');
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        meta.innerHTML =
-          '<span class="prefix">' + escapeHtml(snippet.prefix) + '</span>' +
-          '<span class="name">' + escapeHtml(snippet.name) + '</span>';
-        li.appendChild(meta);
-        li.addEventListener('click', () => fillFromSnippet(snippet));
+        if (snippet.id === state.editingId) {
+          li.classList.add('active');
+        }
+        li.innerHTML =
+          '<span class="snippet-prefix">' + escapeHtml(snippet.prefix) + '</span>' +
+          '<span class="snippet-name">' + escapeHtml(snippet.name) + '</span>';
+        li.addEventListener('click', () => onSnippetClick(snippet));
         els.list.appendChild(li);
       }
     }
 
+    els.body.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const ta = els.body;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const tab = '  ';
+        ta.value = ta.value.substring(0, start) + tab + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + tab.length;
+        updatePreview();
+      }
+    });
     els.body.addEventListener('input', updatePreview);
     els.editor.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -664,14 +844,27 @@ function renderHtml(webview: vscode.Webview): string {
           return;
         case 'snippets':
           state.snippets = msg.data || [];
+          rebuildCatalogLinks();
+          vscode.setState(state);
           renderList();
+          renderSuggestions();
           if (state.editingId && !state.snippets.find((s) => s.id === state.editingId)) resetForm();
+          return;
+        case 'snippetLinked':
+          state.catalogLinks[msg.catalogId] = msg.snippetId;
+          vscode.setState(state);
+          renderSuggestions();
           return;
         case 'tips':
           state.tips = msg.data || [];
           renderTips();
           return;
         case 'saved':
+          state.editingId = msg.id;
+          els.id.value = msg.id;
+          els.deleteBtn.hidden = false;
+          els.title.textContent = 'Edit snippet';
+          vscode.setState(state);
           showStatus('Snippet saved.', 'info');
           return;
         case 'validationError':

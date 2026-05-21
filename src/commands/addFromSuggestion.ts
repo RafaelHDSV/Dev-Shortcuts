@@ -6,7 +6,7 @@ import {
   getSuggestionByCatalogId,
   SUGGESTION_CATALOG
 } from '../snippets/suggestions';
-import { SuggestedSnippet } from '../types';
+import { Snippet, SuggestedSnippet } from '../types';
 
 export function createAddFromSuggestionCommand(store: SnippetStore) {
   return async function addFromSuggestion(
@@ -22,34 +22,44 @@ export function createAddFromSuggestionCommand(store: SnippetStore) {
   };
 }
 
+export interface AddSuggestionOptions {
+  /** When true (webview), auto-suffix duplicate prefix instead of prompting. */
+  silentRename?: boolean;
+}
+
 export async function addSuggestionToStore(
   store: SnippetStore,
-  suggestion: SuggestedSnippet
-): Promise<void> {
+  suggestion: SuggestedSnippet,
+  options?: AddSuggestionOptions
+): Promise<Snippet | undefined> {
   let prefix = suggestion.prefix;
   const existing = store.getByPrefix(prefix);
   if (existing) {
-    const rename = await vscode.window.showQuickPick(
-      [
+    if (options?.silentRename) {
+      prefix = findFreePrefix(prefix, store);
+    } else {
+      const rename = await vscode.window.showQuickPick(
+        [
+          {
+            label: 'Rename imported prefix',
+            description: `Suggest ${prefix}2, ${prefix}3, ...`,
+            value: 'rename' as const
+          },
+          {
+            label: 'Cancel',
+            value: 'cancel' as const
+          }
+        ],
         {
-          label: 'Rename imported prefix',
-          description: `Suggest ${prefix}2, ${prefix}3, ...`,
-          value: 'rename' as const
-        },
-        {
-          label: 'Cancel',
-          value: 'cancel' as const
+          title: `Prefix "${prefix}" already exists`,
+          placeHolder: 'Choose an action'
         }
-      ],
-      {
-        title: `Prefix "${prefix}" already exists`,
-        placeHolder: 'Choose an action'
+      );
+      if (rename?.value !== 'rename') {
+        return undefined;
       }
-    );
-    if (rename?.value !== 'rename') {
-      return;
+      prefix = findFreePrefix(prefix, store);
     }
-    prefix = findFreePrefix(prefix, store);
   }
 
   const snippet = {
@@ -63,14 +73,19 @@ export async function addSuggestionToStore(
 
   const validation = validateSnippet(snippet, store.getAll());
   if (!validation.ok) {
-    vscode.window.showErrorMessage(validation.message);
-    return;
+    if (!options?.silentRename) {
+      vscode.window.showErrorMessage(validation.message);
+    }
+    return undefined;
   }
 
-  await store.upsert(snippet);
-  vscode.window.showInformationMessage(
-    `Added "${suggestion.name}" as ${prefix}. You can edit it in the manager.`
-  );
+  const saved = await store.upsert(snippet);
+  if (!options?.silentRename) {
+    vscode.window.showInformationMessage(
+      `Added "${suggestion.name}" as ${prefix}. You can edit it in the manager.`
+    );
+  }
+  return saved;
 }
 
 async function pickSuggestion(): Promise<SuggestedSnippet | undefined> {
