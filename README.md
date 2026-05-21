@@ -13,7 +13,7 @@ Instead of memorizing fixed snippet packs, you build your own library: every sni
 - **Import / Export JSON**: back up or share your library; duplicate prefixes can be skipped, overwritten, or renamed on import.
 - **Suggestions gallery** (opt-in): React and generic templates you add to your library — never auto-loaded into completion.
 - **Live preview**: tab stops and placeholders highlighted while editing a snippet body.
-- **Usage tips**: dismissible in-app tips (local only, no telemetry).
+- **Welcome + usage tips**: always shown at the top of the manager when the view loads or refreshes; **Got it** / **Dismiss** only hide until the next refresh (no permanent dismiss).
 - **Default keybindings**: quick access to insert, repeat last snippet, and open the manager (rebindable in Keyboard Shortcuts).
 - **Smarter import dedup**: JS/TS named imports, plus Go, Rust, Java/Kotlin, and C# `using` lines.
 - **Local-only**: snippets are stored in the extension's global storage; no telemetry, no network calls.
@@ -88,6 +88,25 @@ VS Code's built-in `.code-snippets` files also support `!`-style prefixes. If yo
 ## Requirements
 
 - VS Code `>= 1.100.0` or any compatible editor (Cursor included).
+
+## Welcome and usage tips
+
+The **Welcome** panel and **usage tip** cards are **always restored** when the Dev Shortcuts sidebar loads or refreshes (open the view, save a snippet, switch away and back, etc.). **Got it** and **Dismiss** only hide content until the next refresh — they are not saved permanently anymore.
+
+## Reset onboarding (dev + manual)
+
+Full step-by-step (F5 button, command palette, and deleting legacy `state.vscdb` while keeping `snippets.json`): **[docs/onboarding-reset.md](./docs/onboarding-reset.md)**.
+
+Quick manual reset (any install):
+
+1. Close the editor (recommended).
+2. Open extension global storage (folder name ends with `.dev-shortcuts`):
+   - **VS Code (Windows):** `%APPDATA%\Code\User\globalStorage\rafaelvieira1720.dev-shortcuts`
+   - **Cursor (Windows):** `%APPDATA%\Cursor\User\globalStorage\rafaelvieira1720.dev-shortcuts`
+3. Delete **`state.vscdb`** only — keep **`snippets.json`**.
+4. Reopen the editor → **Developer: Reload Window** → open **Dev Shortcuts**.
+
+In **Extension Development Host (F5)** you can also use **Reset onboarding** in the Library toolbar or `Dev Shortcuts: Reset onboarding (dev only)`.
 
 ## Development
 

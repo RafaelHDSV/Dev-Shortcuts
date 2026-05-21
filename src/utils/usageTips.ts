@@ -1,8 +1,17 @@
 import * as vscode from 'vscode';
 import { UsageTip } from '../types';
 
-const DISMISSED_KEY = 'devShortcuts.dismissedTips';
-const WELCOME_SEEN_KEY = 'devShortcuts.welcomeSeen';
+/** Legacy keys (pre-0.2.1); cleared by resetOnboarding for manual recovery. */
+export const ONBOARDING_LEGACY_KEYS = {
+  dismissedTips: 'devShortcuts.dismissedTips',
+  welcomeSeen: 'devShortcuts.welcomeSeen'
+} as const;
+
+const DISMISSED_KEY = ONBOARDING_LEGACY_KEYS.dismissedTips;
+const WELCOME_SEEN_KEY = ONBOARDING_LEGACY_KEYS.welcomeSeen;
+
+/** Extension global storage folder name: `{publisher}.{name}` */
+export const EXTENSION_STORAGE_ID = 'RafaelVieira1720.dev-shortcuts';
 
 export const USAGE_TIPS: UsageTip[] = [
   {
@@ -42,6 +51,7 @@ export const USAGE_TIPS: UsageTip[] = [
   }
 ];
 
+/** @deprecated Onboarding always shows all tips; kept for legacy state reads. */
 export function getActiveTips(context: vscode.ExtensionContext): UsageTip[] {
   const dismissed = getDismissedTipIds(context);
   return USAGE_TIPS.filter((t) => !dismissed.has(t.id));

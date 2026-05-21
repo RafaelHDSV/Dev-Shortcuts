@@ -4,6 +4,13 @@ All notable changes to **Dev Shortcuts** are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Welcome panel and usage tips always show when the snippet manager loads or refreshes; dismiss is session-only (until the next refresh), not stored in `globalState`.
+- Manual onboarding reset guide: `docs/onboarding-reset.md`.
+
 ## [0.2.0] - 2026-05-20
 
 ### Added

@@ -10,7 +10,7 @@ export function createResetOnboardingCommand(
     await resetOnboarding(context);
     viewProvider.refreshAfterOnboardingReset();
     vscode.window.showInformationMessage(
-      'Dev Shortcuts: onboarding reset (welcome + tips). Snippets were kept.'
+      'Dev Shortcuts: legacy onboarding state cleared. Snippets were kept. Reload the window if the sidebar was already open.'
     );
   };
 }

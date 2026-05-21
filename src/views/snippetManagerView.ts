@@ -5,14 +5,7 @@ import { SUGGESTION_CATALOG } from '../snippets/suggestions';
 import { SnippetStore } from '../storage/snippetStore';
 import { Snippet } from '../types';
 import { isDevExtension } from '../utils/devMode';
-import {
-  dismissTip,
-  getActiveTips,
-  hasSeenWelcome,
-  markWelcomeSeen,
-  resetOnboarding,
-  USAGE_TIPS
-} from '../utils/usageTips';
+import { resetOnboarding, USAGE_TIPS } from '../utils/usageTips';
 import { validateSnippet } from '../validation/snippetValidator';
 
 export const VIEW_ID = 'devShortcuts.snippetManager';
@@ -25,8 +18,6 @@ type WebviewInbound =
   | { type: 'export' }
   | { type: 'import' }
   | { type: 'addSuggestion'; catalogId: string }
-  | { type: 'dismissTip'; tipId: string }
-  | { type: 'dismissWelcome' }
   | { type: 'resetOnboarding' };
 
 type WebviewOutbound =
@@ -34,12 +25,10 @@ type WebviewOutbound =
       type: 'init'
       snippets: Snippet[]
       suggestions: typeof SUGGESTION_CATALOG
-      tips: ReturnType<typeof getActiveTips>
-      showWelcome: boolean
+      tips: typeof USAGE_TIPS
       devMode: boolean
     }
   | { type: 'snippets'; data: Snippet[] }
-  | { type: 'tips'; data: ReturnType<typeof getActiveTips> }
   | { type: 'saved'; id: string }
   | {
       type: 'snippetLinked'
@@ -48,12 +37,7 @@ type WebviewOutbound =
       prefix: string
     }
   | { type: 'validationError'; field: string; message: string }
-  | { type: 'info'; message: string }
-  | {
-      type: 'onboardingReset'
-      tips: typeof USAGE_TIPS
-      showWelcome: boolean
-    };
+  | { type: 'info'; message: string };
 
 interface SnippetDraft {
   id?: string
@@ -176,23 +160,15 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
         }
         return;
       }
-      case 'dismissTip':
-        await dismissTip(this.context, msg.tipId);
-        this.pushTips();
-        return;
-      case 'dismissWelcome':
-        await markWelcomeSeen(this.context);
-        return;
       case 'resetOnboarding':
         if (!isDevExtension(this.context)) {
           return;
         }
         await resetOnboarding(this.context);
         await this.refreshUi();
-        this.pushOnboardingReset();
         this.post({
           type: 'info',
-          message: 'Onboarding reset. Welcome and tips are visible again.'
+          message: 'Legacy onboarding state cleared. Welcome and tips reload on each refresh.'
         });
         return;
     }
@@ -200,10 +176,7 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
   /** Called from dev-only command after reset. */
   refreshAfterOnboardingReset(): void {
-    void (async () => {
-      await this.refreshUi();
-      this.pushOnboardingReset();
-    })();
+    void this.refreshUi();
   }
 
   private async saveSnippet(draft: SnippetDraft): Promise<void> {
@@ -248,27 +221,13 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
       type: 'init',
       snippets: this.store.getAll(),
       suggestions: SUGGESTION_CATALOG,
-      tips: getActiveTips(this.context),
-      showWelcome: !hasSeenWelcome(this.context),
+      tips: USAGE_TIPS,
       devMode: isDevExtension(this.context)
     });
   }
 
   private pushSnippets(): void {
     this.post({ type: 'snippets', data: this.store.getAll() });
-  }
-
-  private pushTips(): void {
-    this.post({ type: 'tips', data: getActiveTips(this.context) });
-  }
-
-  /** Forces welcome + all tips visible in the webview after reset. */
-  private pushOnboardingReset(): void {
-    this.post({
-      type: 'onboardingReset',
-      tips: USAGE_TIPS,
-      showWelcome: true
-    });
   }
 
   private post(message: WebviewOutbound): void {
@@ -497,7 +456,7 @@ function renderHtml(webview: vscode.Webview): string {
 <body>
   <h1>Dev Shortcuts</h1>
 
-  <div id="welcome" class="welcome" hidden>
+  <div id="welcome" class="welcome">
     <strong>Welcome</strong>
     <p>Type <code>!</code> in any editor to trigger your snippets. Nothing is pre-installed — browse <strong>Suggestions</strong> or create your own.</p>
     <button type="button" id="welcome-dismiss" class="small secondary">Got it</button>
@@ -759,13 +718,9 @@ function renderHtml(webview: vscode.Webview): string {
       renderSuggestions();
     }
 
-    function applyWelcomeVisible(show) {
-      if (show) {
-        els.welcome.hidden = false;
-        els.welcome.removeAttribute('hidden');
-      } else {
-        els.welcome.hidden = true;
-      }
+    function showOnboardingPanels() {
+      els.welcome.hidden = false;
+      els.welcome.removeAttribute('hidden');
     }
 
     function setTab(name) {
@@ -800,7 +755,7 @@ function renderHtml(webview: vscode.Webview): string {
         dismiss.textContent = 'Dismiss';
         dismiss.style.marginTop = '6px';
         dismiss.addEventListener('click', () => {
-          vscode.postMessage({ type: 'dismissTip', tipId: tip.id });
+          card.remove();
         });
         card.appendChild(dismiss);
         els.tips.appendChild(card);
@@ -998,7 +953,6 @@ function renderHtml(webview: vscode.Webview): string {
     }
     bindClick('welcome-dismiss', () => {
       els.welcome.hidden = true;
-      vscode.postMessage({ type: 'dismissWelcome' });
     });
     if (els.suggestionFilter) {
       els.suggestionFilter.addEventListener('change', renderSuggestions);
@@ -1043,7 +997,7 @@ function renderHtml(webview: vscode.Webview): string {
           state.snippets = msg.snippets || [];
           state.suggestions = msg.suggestions || [];
           state.tips = msg.tips || [];
-          applyWelcomeVisible(!!msg.showWelcome);
+          showOnboardingPanels();
           if (els.resetOnboardingBtn) {
             els.resetOnboardingBtn.hidden = !msg.devMode;
           }
@@ -1052,12 +1006,6 @@ function renderHtml(webview: vscode.Webview): string {
           renderList();
           renderSuggestions();
           updatePreview();
-          return;
-        case 'onboardingReset':
-          state.tips = msg.tips || [];
-          applyWelcomeVisible(!!msg.showWelcome);
-          vscode.setState(state);
-          renderTips();
           return;
         case 'snippets':
           state.snippets = msg.data || [];
@@ -1071,10 +1019,6 @@ function renderHtml(webview: vscode.Webview): string {
           state.catalogLinks[msg.catalogId] = msg.snippetId;
           vscode.setState(state);
           renderSuggestions();
-          return;
-        case 'tips':
-          state.tips = msg.data || [];
-          renderTips();
           return;
         case 'saved':
           state.editingId = msg.id;
