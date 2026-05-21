@@ -1,5 +1,7 @@
 # Dev Shortcuts
 
+![Demo](demo.gif)
+
 User-owned snippet shortcuts for VS Code and Cursor, triggered by the `!` prefix in **any** language.
 
 Instead of memorizing fixed snippet packs, you build your own library: every snippet is created, edited, and stored by you, and shows up whenever you type `!` in an editor.
@@ -134,8 +136,11 @@ VS Code's built-in `.code-snippets` files also support `!`-style prefixes. If yo
 ```bash
 npm install
 npm run compile
+npm run lint
 # Press F5 in VS Code to launch the Extension Development Host
 ```
+
+Before each release, run through `docs/manual-test-checklist.md` in the Extension Development Host.
 
 ## Suggestions catalog
 

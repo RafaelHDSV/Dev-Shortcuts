@@ -2,7 +2,7 @@
 
 > Contexto primario para assistentes de IA (regra `ai-context.mdc`). Atualize este arquivo ao evoluir o produto.
 
-**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Ano:** 2026
+**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Versao:** 0.2.1 | **Ano:** 2026
 
 ---
 
@@ -31,17 +31,22 @@ Especificacao completa: [`docs/especificacao.md`](./especificacao.md).
 
 ```
 src/
-  extension.ts                # activate/deactivate, wiring
-  storage/snippetStore.ts     # CRUD + load/save JSON + onDidChange
+  extension.ts
+  types.ts
+  storage/
+    snippetStore.ts
+    lastSnippet.ts
   validation/snippetValidator.ts
   providers/completionProvider.ts
-  import/importResolver.ts    # dedupe e insercao no topo
-  views/snippetManagerView.ts # WebviewViewProvider (Activity Bar)
+  import/importResolver.ts
+  snippets/suggestions.ts
+  views/snippetManagerView.ts
   commands/
-    insertSnippet.ts
     openManager.ts
+    insertSnippet.ts
+    insertLastSnippet.ts
     importExport.ts
-  types.ts
+    addFromSuggestion.ts
 ```
 
 ---
@@ -52,9 +57,10 @@ src/
 2. Armazenamento exclusivamente local (`globalStorageUri`), sem telemetria, sem chamadas de rede.
 3. UI em **ingles**; documentacao tecnica em pt-BR fica restrita a `docs/` e `.issues/`.
 4. Sem migracao de `devShortcuts.customSnippets` do prototipo; usuario reimporta via comando.
-5. Galeria de sugestoes React fora do MVP; import/export entra no MVP.
+5. Galeria de sugestoes opt-in (v0.2+); nada do catalogo entra em completion ate Add to library.
 6. Conflito com snippets nativos (`.code-snippets`) e tratado apenas via README.
-7. Ativacao ampla (`onStartupFinished`) para o provider funcionar em qualquer linguagem.
+7. Ativacao: `onStartupFinished` + `onView:devShortcuts.snippetManager`.
+8. Onboarding na webview removido (v0.2.1); guia no README (Reference).
 
 ---
 
@@ -64,8 +70,12 @@ src/
 |------------|--------|
 | `devShortcuts.openManager` | Dev Shortcuts: Manage snippets |
 | `devShortcuts.insert` | Dev Shortcuts: Insert snippet... |
+| `devShortcuts.insertLast` | Dev Shortcuts: Insert last used snippet |
 | `devShortcuts.export` | Dev Shortcuts: Export snippets... |
 | `devShortcuts.import` | Dev Shortcuts: Import snippets... |
+| `devShortcuts.addFromSuggestion` | Dev Shortcuts: Add suggested snippet... |
+
+Atalhos padrao: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M` manager (macOS `Cmd`).
 
 ---
 
@@ -75,26 +85,26 @@ src/
 |------|-----|
 | Repositorio | https://github.com/RafaelHDSV/Dev-Shortcuts |
 | Especificacao | `docs/especificacao.md` |
-| Proposta de implementacao | `.issues/2026-05-20-dev-shortcuts-mvp.md` |
+| Proposta MVP | `.issues/2026-05-20-dev-shortcuts-mvp.md` |
+| Incrementos | `.issues/README.md` |
 | Checklist de teste manual | `docs/manual-test-checklist.md` |
 
 ---
 
-## Pos-MVP (v0.2.0)
+## Versao 0.2.x (entregue)
 
-- Galeria de sugestoes opt-in (`src/snippets/suggestions.ts`) — React + generic.
-- Preview ao vivo na webview (tab stops destacados).
-- Documentacao de uso na secao **Reference** do `README.md` (sem onboarding na webview).
-- Atalhos padrao + `devShortcuts.insertLast`.
-- Import resolver ampliado (Go, Rust, Java, C#, named imports JS/TS).
+- Galeria **Suggestions** (`src/snippets/suggestions.ts`) — React + generic.
+- Preview ao vivo na webview; clique na linha inteira na lista de sugestoes.
+- `insertLast` + `lastSnippet.ts`; import resolver ampliado.
+- v0.2.1: sem welcome/tips na UI; README Reference; limpeza de fontes legado.
 
 ## Fora de escopo
 
 - Snippets por workspace ou projeto.
 - AST completo / path aliases para imports.
-- Testes automatizados (`@vscode/test-electron`).
+- Testes automatizados (`@vscode/test-electron`) — ver `.issues/2026-05-21-increment-testes-automatizados.md`.
 - Telemetria ou sincronizacao em nuvem.
 
 ---
 
-*Gerado com Vieira CLI (`vieira common` ou scaffold `front` / `full` / `extension`).*
+*Gerado com Vieira CLI; atualizado no incremento release polish v0.2.1.*

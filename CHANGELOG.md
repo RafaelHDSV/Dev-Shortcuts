@@ -6,9 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-21
+
 ### Removed
 
-- Welcome panel, usage tip cards, and dev-only reset onboarding from the manager UI. Equivalent guidance lives in **README.md** (Reference section).
+- Welcome panel, usage tip cards, and dev-only reset onboarding from the manager UI. Usage guidance lives in **README.md** (Reference section).
+- Legacy source files `snippetCompletionProvider.ts` and `defaults.ts` (pre-MVP prototypes).
+
+### Changed
+
+- Release polish: `docs/context.md` synced with v0.2 commands and layout; publishing steps documented in README.
 
 ## [0.2.0] - 2026-05-20
 

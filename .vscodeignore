@@ -10,7 +10,7 @@ tsconfig.json
 yarn.lock
 node_modules/**
 .issues/**
-docs/manual-test-checklist.md
+docs/**
 .cursor/**
 .github/**
 scripts/**

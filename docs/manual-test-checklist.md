@@ -1,6 +1,8 @@
-# Manual test checklist — Dev Shortcuts MVP
+# Manual test checklist — Dev Shortcuts
 
 Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
+
+**Ultima validacao release:** v0.2.1 — 2026-05-21 (compile + lint OK; checklist manual pendente de execucao completa no F5 pelo mantenedor).
 
 ## Preparacao
 
@@ -63,7 +65,7 @@ Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 - [ ] Aba **Suggestions**: filtrar React / Generic; **Add to library** adiciona sem ativar em completion ate salvar na biblioteca.
 - [ ] Prefixo duplicado ao adicionar sugestao: oferece renomear (`!rus2`, etc.).
 - [ ] **Live preview** atualiza ao digitar body (`${1:foo}`, `$0` destacados).
-- [ ] Manager sem Welcome nem cards de dicas; referencia em README.md (secao Reference).
+- [ ] Manager sem Welcome nem cards de dicas; referencia em README.md (secao Reference). (v0.2.1+)
 - [ ] `Ctrl+Alt+S` / `Cmd+Alt+S` abre quick pick de insercao.
 - [ ] `Ctrl+Alt+Shift+S` reinsere ultimo snippet usado.
 - [ ] `Ctrl+Alt+M` foca o manager.
