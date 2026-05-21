@@ -2,7 +2,7 @@
   "name": "dev-shortcuts",
   "displayName": "Dev Shortcuts",
   "description": "User-owned snippet shortcuts triggered by the \"!\" prefix in any language.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "RafaelVieira1720",
   "icon": "media/icon.png",
   "license": "MIT",
