@@ -2,20 +2,6 @@
 
 Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 
-## Welcome e dicas (sempre visiveis)
-
-- [ ] Ao abrir Dev Shortcuts: painel Welcome + todos os usage tips no topo.
-- [ ] **Got it** / **Dismiss**: somem ate proximo refresh (salvar snippet, reabrir view, Reload Window).
-- [ ] Apos refresh/init: Welcome + dicas completas de novo.
-- [ ] Ver `docs/onboarding-reset.md` para reset manual de `state.vscdb`.
-
-## Reset onboarding legado (somente F5 / Extension Development)
-
-- [ ] Com F5, na toolbar da Library aparece **Reset onboarding** (borda tracejada).
-- [ ] Paleta: `Dev Shortcuts: Reset onboarding (dev only)`.
-- [ ] Apos reset + Reload Window: estado legado limpo; `snippets.json` permanece.
-- [ ] Instalacao normal (Marketplace): botao e comando **nao** aparecem.
-
 ## Preparacao
 
 - [ ] `npm install`
@@ -77,7 +63,7 @@ Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 - [ ] Aba **Suggestions**: filtrar React / Generic; **Add to library** adiciona sem ativar em completion ate salvar na biblioteca.
 - [ ] Prefixo duplicado ao adicionar sugestao: oferece renomear (`!rus2`, etc.).
 - [ ] **Live preview** atualiza ao digitar body (`${1:foo}`, `$0` destacados).
-- [ ] Dicas e Welcome sempre no topo apos init/refresh; **Dismiss** volta no proximo refresh.
+- [ ] Manager sem Welcome nem cards de dicas; referencia em README.md (secao Reference).
 - [ ] `Ctrl+Alt+S` / `Cmd+Alt+S` abre quick pick de insercao.
 - [ ] `Ctrl+Alt+Shift+S` reinsere ultimo snippet usado.
 - [ ] `Ctrl+Alt+M` foca o manager.

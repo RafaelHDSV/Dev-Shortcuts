@@ -84,7 +84,7 @@ src/
 
 - Galeria de sugestoes opt-in (`src/snippets/suggestions.ts`) — React + generic.
 - Preview ao vivo na webview (tab stops destacados).
-- Dicas locais dismissiveis (`src/utils/usageTips.ts`).
+- Documentacao de uso na secao **Reference** do `README.md` (sem onboarding na webview).
 - Atalhos padrao + `devShortcuts.insertLast`.
 - Import resolver ampliado (Go, Rust, Java, C#, named imports JS/TS).
 

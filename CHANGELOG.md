@@ -6,10 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
-### Changed
+### Removed
 
-- Welcome panel and usage tips always show when the snippet manager loads or refreshes; dismiss is session-only (until the next refresh), not stored in `globalState`.
-- Manual onboarding reset guide: `docs/onboarding-reset.md`.
+- Welcome panel, usage tip cards, and dev-only reset onboarding from the manager UI. Equivalent guidance lives in **README.md** (Reference section).
 
 ## [0.2.0] - 2026-05-20
 

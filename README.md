@@ -13,7 +13,6 @@ Instead of memorizing fixed snippet packs, you build your own library: every sni
 - **Import / Export JSON**: back up or share your library; duplicate prefixes can be skipped, overwritten, or renamed on import.
 - **Suggestions gallery** (opt-in): React and generic templates you add to your library — never auto-loaded into completion.
 - **Live preview**: tab stops and placeholders highlighted while editing a snippet body.
-- **Welcome + usage tips**: always shown at the top of the manager when the view loads or refreshes; **Got it** / **Dismiss** only hide until the next refresh (no permanent dismiss).
 - **Default keybindings**: quick access to insert, repeat last snippet, and open the manager (rebindable in Keyboard Shortcuts).
 - **Smarter import dedup**: JS/TS named imports, plus Go, Rust, Java/Kotlin, and C# `using` lines.
 - **Local-only**: snippets are stored in the extension's global storage; no telemetry, no network calls.
@@ -28,6 +27,47 @@ Instead of memorizing fixed snippet packs, you build your own library: every sni
    - **Body**: VS Code snippet syntax, multi-line allowed.
    - **Imports** (optional): one line per missing import.
 4. Save. In any editor, type the prefix (e.g. `!ef`) and accept the suggestion.
+
+Nothing is pre-installed. Use the **Suggestions** tab for opt-in templates or create snippets from scratch in **Library**.
+
+## Reference
+
+### Trigger (`!` in the editor)
+
+Start every Dev Shortcuts prefix with `!`. IntelliSense lists your snippets; keep typing to filter (e.g. `!ef`). You can also use **Insert snippet...** (`Ctrl+Alt+S` / `Cmd+Alt+S`) or type the prefix directly in the file.
+
+### Snippet body syntax
+
+Use `$1`, `${1:placeholder}`, and `$0` for tab stops — same as VS Code user snippets. The manager **Live preview** highlights placeholders while you edit the body. Press `Tab` in the body field to insert two spaces.
+
+### Optional imports
+
+Add import lines in the **Imports** field (one per line). They are inserted at the top of the file when you use the snippet, without duplicating existing imports (best-effort for JS/TS, Python, Go, Rust, Java/Kotlin, C#).
+
+### Activity Bar manager
+
+| Tab | Purpose |
+|-----|---------|
+| **Library** | Your snippets: create, edit, delete, import, export. Saved snippets appear in completion when you type `!` and the prefix. |
+| **Suggestions** | Opt-in catalog (React, Generic). **Add to library** copies a template into your store; nothing is installed until you choose. Templates never auto-activate in completion. |
+
+### Back up your library
+
+- **Export snippets...** — saves JSON (`schemaVersion: 1`) to a file you choose.
+- **Import snippets...** — loads JSON; on duplicate prefixes choose **Skip**, **Overwrite**, or **Rename**.
+
+### Storage location
+
+Snippets live in the extension global storage folder (not `settings.json`):
+
+| Editor | Folder (typical) |
+|--------|------------------|
+| VS Code (Windows) | `%APPDATA%\Code\User\globalStorage\rafaelvieira1720.dev-shortcuts\` |
+| Cursor (Windows) | `%APPDATA%\Cursor\User\globalStorage\rafaelvieira1720.dev-shortcuts\` |
+| VS Code (macOS) | `~/Library/Application Support/Code/User/globalStorage/rafaelvieira1720.dev-shortcuts/` |
+| Cursor (macOS) | `~/Library/Application Support/Cursor/User/globalStorage/rafaelvieira1720.dev-shortcuts/` |
+
+Main file: **`snippets.json`**. Extension UI state may use `state.vscdb` in the same folder; deleting only `state.vscdb` does not remove your snippets.
 
 ## Commands
 
@@ -89,25 +129,6 @@ VS Code's built-in `.code-snippets` files also support `!`-style prefixes. If yo
 
 - VS Code `>= 1.100.0` or any compatible editor (Cursor included).
 
-## Welcome and usage tips
-
-The **Welcome** panel and **usage tip** cards are **always restored** when the Dev Shortcuts sidebar loads or refreshes (open the view, save a snippet, switch away and back, etc.). **Got it** and **Dismiss** only hide content until the next refresh — they are not saved permanently anymore.
-
-## Reset onboarding (dev + manual)
-
-Full step-by-step (F5 button, command palette, and deleting legacy `state.vscdb` while keeping `snippets.json`): **[docs/onboarding-reset.md](./docs/onboarding-reset.md)**.
-
-Quick manual reset (any install):
-
-1. Close the editor (recommended).
-2. Open extension global storage (folder name ends with `.dev-shortcuts`):
-   - **VS Code (Windows):** `%APPDATA%\Code\User\globalStorage\rafaelvieira1720.dev-shortcuts`
-   - **Cursor (Windows):** `%APPDATA%\Cursor\User\globalStorage\rafaelvieira1720.dev-shortcuts`
-3. Delete **`state.vscdb`** only — keep **`snippets.json`**.
-4. Reopen the editor → **Developer: Reload Window** → open **Dev Shortcuts**.
-
-In **Extension Development Host (F5)** you can also use **Reset onboarding** in the Library toolbar or `Dev Shortcuts: Reset onboarding (dev only)`.
-
 ## Development
 
 ```bash
@@ -116,9 +137,9 @@ npm run compile
 # Press F5 in VS Code to launch the Extension Development Host
 ```
 
-## Suggestions
+## Suggestions catalog
 
-Open the **Suggestions** tab in the Activity Bar manager. Categories: **React** and **Generic**. Click **Add to library** to copy a template into your personal store (prefixes remain editable).
+Open the **Suggestions** tab in the Activity Bar manager. Categories: **React** and **Generic**. Click **Add to library** to copy a template into your personal store (prefixes remain editable). Same catalog is available via `Dev Shortcuts: Add suggested snippet...`.
 
 ## License
 

@@ -33,12 +33,6 @@ export interface SuggestedSnippet {
   description?: string;
 }
 
-export interface UsageTip {
-  id: string;
-  title: string;
-  body: string;
-}
-
 export type ValidationField =
   | 'name'
   | 'prefix'

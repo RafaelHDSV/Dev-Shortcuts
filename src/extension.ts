@@ -9,12 +9,10 @@ import {
 } from './commands/importExport';
 import { createAddFromSuggestionCommand } from './commands/addFromSuggestion';
 import { createInsertLastSnippetCommand } from './commands/insertLastSnippet';
-import { createResetOnboardingCommand } from './commands/resetOnboarding';
 import {
   SnippetManagerViewProvider,
   VIEW_ID
 } from './views/snippetManagerView';
-import { isDevExtension } from './utils/devMode';
 
 const LOG_CHANNEL = 'Dev Shortcuts';
 
@@ -61,15 +59,6 @@ export async function activate(
       createAddFromSuggestionCommand(store)
     )
   );
-
-  if (isDevExtension(context)) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(
-        'devShortcuts.resetOnboarding',
-        createResetOnboardingCommand(context, viewProvider)
-      )
-    );
-  }
 
   void store.whenReady().then(() => {
     log.appendLine('Snippet store ready.');
