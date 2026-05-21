@@ -4,11 +4,13 @@
 // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
 	"version": "0.2.0",
-	"configurations": [{
+	"configurations": [		{
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
+			"stopOnEntry": false,
+			"timeout": 120000,
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],

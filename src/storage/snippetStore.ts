@@ -7,38 +7,23 @@ import {
 } from '../types';
 
 const STORE_FILENAME = 'snippets.json';
+const INIT_TIMEOUT_MS = 8000;
 
 export class SnippetStore {
   private readonly _onDidChange = new vscode.EventEmitter<void>();
   readonly onDidChange = this._onDidChange.event;
 
+  private readonly ready: Promise<void>;
+
   private snippets: Snippet[] = [];
   private fileUri!: vscode.Uri;
-  private initialized = false;
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly context: vscode.ExtensionContext) {
+    this.ready = this.initializeWithTimeout();
+  }
 
-  async initialize(): Promise<void> {
-    if (this.initialized) {
-      return;
-    }
-
-    try {
-      await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-      this.fileUri = vscode.Uri.joinPath(
-        this.context.globalStorageUri,
-        STORE_FILENAME
-      );
-      await this.load();
-    } catch (err) {
-      console.error('[Dev Shortcuts] Store init failed, starting empty:', err);
-      this.snippets = [];
-      this.fileUri = vscode.Uri.joinPath(
-        this.context.globalStorageUri,
-        STORE_FILENAME
-      );
-    }
-    this.initialized = true;
+  whenReady(): Promise<void> {
+    return this.ready;
   }
 
   getAll(): Snippet[] {
@@ -57,6 +42,7 @@ export class SnippetStore {
     createdAt?: string
     updatedAt?: string
   }): Promise<Snippet> {
+    await this.whenReady();
     const now = new Date().toISOString();
     const existing = this.snippets.find((s) => s.id === input.id);
 
@@ -85,6 +71,7 @@ export class SnippetStore {
   }
 
   async remove(id: string): Promise<void> {
+    await this.whenReady();
     const before = this.snippets.length;
     this.snippets = this.snippets.filter((s) => s.id !== id);
     if (this.snippets.length !== before) {
@@ -94,6 +81,7 @@ export class SnippetStore {
   }
 
   async replaceAll(snippets: Snippet[]): Promise<void> {
+    await this.whenReady();
     this.snippets = snippets.map((s) => ({ ...s }));
     await this.save();
     this._onDidChange.fire();
@@ -104,6 +92,37 @@ export class SnippetStore {
       schemaVersion: CURRENT_SCHEMA_VERSION,
       snippets: this.getAll()
     };
+  }
+
+  private async initializeWithTimeout(): Promise<void> {
+    const init = this.initialize();
+    const timeout = new Promise<void>((_, reject) => {
+      setTimeout(
+        () => reject(new Error('Snippet store init timed out')),
+        INIT_TIMEOUT_MS
+      );
+    });
+    try {
+      await Promise.race([init, timeout]);
+    } catch (err) {
+      console.error('[Dev Shortcuts] Store init failed, starting empty:', err);
+      this.snippets = [];
+      if (!this.fileUri) {
+        this.fileUri = vscode.Uri.joinPath(
+          this.context.globalStorageUri,
+          STORE_FILENAME
+        );
+      }
+    }
+  }
+
+  private async initialize(): Promise<void> {
+    await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
+    this.fileUri = vscode.Uri.joinPath(
+      this.context.globalStorageUri,
+      STORE_FILENAME
+    );
+    await this.load();
   }
 
   private async load(): Promise<void> {
@@ -132,7 +151,9 @@ export class SnippetStore {
   }
 
   private migrate(file: Partial<SnippetStoreFile>): Snippet[] {
-    if (!file || !Array.isArray(file.snippets)) {return [];}
+    if (!file || !Array.isArray(file.snippets)) {
+      return [];
+    }
     const normalized = file.snippets
       .map((s) => normalizeSnippet(s))
       .filter((s): s is Snippet => s !== null);
@@ -141,11 +162,15 @@ export class SnippetStore {
 }
 
 function normalizeSnippet(input: unknown): Snippet | null {
-  if (!input || typeof input !== 'object') {return null;}
+  if (!input || typeof input !== 'object') {
+    return null;
+  }
   const record = input as Record<string, unknown>;
   const name = typeof record.name === 'string' ? record.name : null;
   const prefix = typeof record.prefix === 'string' ? record.prefix : null;
-  if (!name || !prefix) {return null;}
+  if (!name || !prefix) {
+    return null;
+  }
 
   const rawBody = record.body;
   const body = Array.isArray(rawBody)
@@ -153,7 +178,9 @@ function normalizeSnippet(input: unknown): Snippet | null {
     : typeof rawBody === 'string'
       ? rawBody.split(/\r?\n/)
       : [];
-  if (body.length === 0) {return null;}
+  if (body.length === 0) {
+    return null;
+  }
 
   const importsRaw = record.imports;
   const imports = Array.isArray(importsRaw)
@@ -179,7 +206,9 @@ function normalizeSnippet(input: unknown): Snippet | null {
 }
 
 function isFileNotFound(err: unknown): boolean {
-  if (!err || typeof err !== 'object') {return false;}
+  if (!err || typeof err !== 'object') {
+    return false;
+  }
   const code = (err as { code?: string }).code;
   return code === 'FileNotFound' || code === 'ENOENT';
 }

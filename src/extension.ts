@@ -16,15 +16,21 @@ import {
 } from './views/snippetManagerView';
 import { isDevExtension } from './utils/devMode';
 
+const LOG_CHANNEL = 'Dev Shortcuts';
+
 export async function activate(
   context: vscode.ExtensionContext
 ): Promise<void> {
-  const store = new SnippetStore(context);
-  await store.initialize();
+  const log = vscode.window.createOutputChannel(LOG_CHANNEL, { log: true });
+  context.subscriptions.push(log);
 
-  const viewProvider = new SnippetManagerViewProvider(context, store);
+  const store = new SnippetStore(context);
+  const viewProvider = new SnippetManagerViewProvider(context, store, log);
+
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(VIEW_ID, viewProvider)
+    vscode.window.registerWebviewViewProvider(VIEW_ID, viewProvider, {
+      webviewOptions: { retainContextWhenHidden: true }
+    })
   );
 
   registerCompletionProvider(context, store);
@@ -64,6 +70,12 @@ export async function activate(
       )
     );
   }
+
+  void store.whenReady().then(() => {
+    log.appendLine('Snippet store ready.');
+  });
+
+  log.appendLine('Dev Shortcuts activated.');
 }
 
 export function deactivate(): void {

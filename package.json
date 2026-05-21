@@ -24,7 +24,8 @@
     "react"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:devShortcuts.snippetManager"
   ],
   "main": "./out/extension.js",
   "contributes": {

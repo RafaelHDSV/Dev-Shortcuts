@@ -63,11 +63,12 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly context: vscode.ExtensionContext,
-    private readonly store: SnippetStore
+    private readonly store: SnippetStore,
+    private readonly log?: vscode.OutputChannel
   ) {
     this.context.subscriptions.push(
       this.store.onDidChange(() => {
-        this.pushSnippets();
+        void this.refreshUi();
       })
     );
   }
@@ -93,7 +94,7 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
     view.onDidChangeVisibility(() => {
       if (view.visible) {
-        this.pushInit();
+        void this.refreshUi();
       }
     });
 
@@ -101,14 +102,30 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
       this.view = undefined;
     });
 
-    queueMicrotask(() => this.pushInit());
+    void this.refreshUi();
   }
 
   reveal(): void {
+    void vscode.commands.executeCommand(
+      'workbench.view.extension.devShortcuts.focus'
+    );
     if (this.view) {
       this.view.show?.(true);
     } else {
-      vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+      void vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+    }
+  }
+
+  private async refreshUi(): Promise<void> {
+    try {
+      await this.store.whenReady();
+      this.pushInit();
+    } catch (err) {
+      this.log?.appendLine(`refreshUi failed: ${String(err)}`);
+      this.post({
+        type: 'info',
+        message: 'Could not load snippets. Try Reload Window.'
+      });
     }
   }
 
@@ -116,7 +133,7 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
     switch (msg.type) {
       case 'ready':
       case 'requestInit':
-        this.pushInit();
+        void this.refreshUi();
         return;
       case 'save':
         await this.saveSnippet(msg.snippet);
@@ -165,7 +182,7 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
           return;
         }
         await resetOnboarding(this.context);
-        this.pushInit();
+        void this.refreshUi();
         this.post({
           type: 'info',
           message: 'Onboarding reset. Welcome and tips are visible again.'
@@ -176,7 +193,7 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
   /** Called from dev-only command after reset. */
   refreshAfterOnboardingReset(): void {
-    this.pushInit();
+    void this.refreshUi();
   }
 
   private async saveSnippet(draft: SnippetDraft): Promise<void> {
@@ -575,21 +592,111 @@ function renderHtml(webview: vscode.Webview): string {
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function renderSnippetPreview(text) {
-      if (!text) return '<span class="end">(empty)</span>';
+    function clearNode(node) {
+      while (node.firstChild) {
+        node.removeChild(node.firstChild);
+      }
+    }
+
+    function appendHighlightedLine(container, line) {
+      const rePlaceholder = /\\$\\{([0-9]+):([^}]+)\\}/g;
+      const reTab = /\\$([0-9]+)/g;
+      const reTm = /\\$TM_([A-Za-z0-9_]+)/g;
+      let last = 0;
+      let m;
+      const parts = [];
+      const markers = [];
+      rePlaceholder.lastIndex = 0;
+      while ((m = rePlaceholder.exec(line)) !== null) {
+        markers.push({ i: m.index, len: m[0].length, text: m[2], kind: 'ph' });
+      }
+      reTab.lastIndex = 0;
+      while ((m = reTab.exec(line)) !== null) {
+        if (!markers.some((x) => m.index >= x.i && m.index < x.i + x.len)) {
+          markers.push({ i: m.index, len: m[0].length, text: m[1], kind: 'tab' });
+        }
+      }
+      reTm.lastIndex = 0;
+      while ((m = reTm.exec(line)) !== null) {
+        if (!markers.some((x) => m.index >= x.i && m.index < x.i + x.len)) {
+          markers.push({ i: m.index, len: m[0].length, text: m[1], kind: 'tm' });
+        }
+      }
+      markers.sort((a, b) => a.i - b.i);
+      for (const mark of markers) {
+        if (mark.i > last) {
+          parts.push({ t: line.slice(last, mark.i), hl: false });
+        }
+        parts.push({
+          t: mark.kind === 'ph' ? mark.text : mark.kind === 'tab' ? '[tab ' + mark.text + ']' : 'TM_' + mark.text,
+          hl: true
+        });
+        last = mark.i + mark.len;
+      }
+      if (last < line.length) {
+        parts.push({ t: line.slice(last), hl: false });
+      }
+      if (parts.length === 0) {
+        parts.push({ t: line, hl: false });
+      }
+      for (const p of parts) {
+        if (p.hl) {
+          const span = document.createElement('span');
+          span.className = 'ts';
+          span.textContent = p.t;
+          container.appendChild(span);
+        } else {
+          container.appendChild(document.createTextNode(p.t));
+        }
+      }
+      if (/\\$0/.test(line)) {
+        const end = document.createElement('span');
+        end.className = 'end';
+        end.textContent = ' (final cursor)';
+        container.appendChild(end);
+      }
+    }
+
+    function fillPreviewBox(box, text, imports, description) {
+      clearNode(box);
+      if (description) {
+        const desc = document.createElement('div');
+        desc.className = 'hint';
+        desc.style.marginBottom = '6px';
+        desc.textContent = description;
+        box.appendChild(desc);
+      }
+      if (!text) {
+        const span = document.createElement('span');
+        span.className = 'end';
+        span.textContent = '(empty)';
+        box.appendChild(span);
+        return;
+      }
       const lines = text.split(LINE_BREAK);
-      return lines.map((line) => {
-        let out = escapeHtml(line);
-        out = out.replace(/\\$\\{([0-9]+):([^}]+)\\}/g, '<span class="ts">$2</span>');
-        out = out.replace(/\\$([0-9]+)/g, '<span class="ts">[tab $1]</span>');
-        out = out.replace(/\\$TM_([A-Za-z0-9_]+)/g, '<span class="ts">TM_$1</span>');
-        if (/\\$0/.test(line)) { out += ' <span class="end">(final cursor)</span>'; }
-        return out;
-      }).join('<br>');
+      lines.forEach((line, idx) => {
+        if (idx > 0) {
+          box.appendChild(document.createElement('br'));
+        }
+        appendHighlightedLine(box, line);
+      });
+      if (imports && imports.length) {
+        const label = document.createElement('div');
+        label.className = 'hint';
+        label.style.marginTop = '6px';
+        label.textContent = 'Imports:';
+        box.appendChild(label);
+        imports.split(LINE_BREAK).forEach((line, idx) => {
+          if (idx > 0) {
+            box.appendChild(document.createElement('br'));
+          }
+          box.appendChild(document.createTextNode(line));
+        });
+      }
     }
 
     function updatePreview() {
-      els.preview.innerHTML = renderSnippetPreview(els.body.value);
+      fillPreviewBox(els.preview, els.body.value, '', '');
     }
 
     function rebuildCatalogLinks() {
@@ -614,21 +721,14 @@ function renderHtml(webview: vscode.Webview): string {
       return id ? state.snippets.find((s) => s.id === id) : undefined;
     }
 
-    function previewFromSuggestion(s) {
-      let html = renderSnippetPreview((s.body || []).join(LINE_BREAK));
-      if (s.imports && s.imports.length) {
-        html += '<div class="hint" style="margin-top:6px">Imports:</div>';
-        html += renderSnippetPreview(s.imports.join(LINE_BREAK));
-      }
-      if (s.description) {
-        html = '<div class="hint" style="margin-bottom:6px">' + escapeHtml(s.description) + '</div>' + html;
-      }
-      return html;
-    }
-
     function selectSuggestion(s) {
       state.selectedSuggestionCatalogId = s.catalogId;
-      els.suggestionPreview.innerHTML = previewFromSuggestion(s);
+      fillPreviewBox(
+        els.suggestionPreview,
+        (s.body || []).join(LINE_BREAK),
+        (s.imports || []).join(LINE_BREAK),
+        s.description || ''
+      );
       vscode.setState(state);
       renderSuggestions();
     }
@@ -649,11 +749,16 @@ function renderHtml(webview: vscode.Webview): string {
     });
 
     function renderTips() {
-      els.tips.innerHTML = '';
+      clearNode(els.tips);
       for (const tip of state.tips) {
         const card = document.createElement('div');
         card.className = 'tip-card';
-        card.innerHTML = '<strong>' + escapeHtml(tip.title) + '</strong><p>' + escapeHtml(tip.body) + '</p>';
+        const strong = document.createElement('strong');
+        strong.textContent = tip.title;
+        const p = document.createElement('p');
+        p.textContent = tip.body;
+        card.appendChild(strong);
+        card.appendChild(p);
         const dismiss = document.createElement('button');
         dismiss.type = 'button';
         dismiss.className = 'small secondary';
@@ -687,10 +792,18 @@ function renderHtml(webview: vscode.Webview): string {
         }
         const main = document.createElement('div');
         main.className = 'suggestion-row-main';
-        main.innerHTML =
-          '<span class="suggestion-prefix">' + escapeHtml(s.prefix) +
-          '<span class="badge">' + escapeHtml(s.category) + '</span></span>' +
-          '<span class="suggestion-name">' + escapeHtml(s.name) + '</span>';
+        const prefixSpan = document.createElement('span');
+        prefixSpan.className = 'suggestion-prefix';
+        prefixSpan.textContent = s.prefix + ' ';
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = s.category;
+        prefixSpan.appendChild(badge);
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'suggestion-name';
+        nameSpan.textContent = s.name;
+        main.appendChild(prefixSpan);
+        main.appendChild(nameSpan);
         main.addEventListener('click', (e) => {
           if (e.target.closest('button')) return;
           selectSuggestion(s);
@@ -719,7 +832,11 @@ function renderHtml(webview: vscode.Webview): string {
             vscode.setState(state);
             vscode.postMessage({ type: 'delete', id: linked.id });
             if (state.selectedSuggestionCatalogId === s.catalogId) {
-              els.suggestionPreview.innerHTML = '<span class="end">Select a suggestion to preview</span>';
+              clearNode(els.suggestionPreview);
+              const span = document.createElement('span');
+              span.className = 'end';
+              span.textContent = 'Select a suggestion to preview';
+              els.suggestionPreview.appendChild(span);
               state.selectedSuggestionCatalogId = null;
             }
             renderSuggestions();
@@ -805,61 +922,82 @@ function renderHtml(webview: vscode.Webview): string {
         if (snippet.id === state.editingId) {
           li.classList.add('active');
         }
-        li.innerHTML =
-          '<span class="snippet-prefix">' + escapeHtml(snippet.prefix) + '</span>' +
-          '<span class="snippet-name">' + escapeHtml(snippet.name) + '</span>';
+        const prefixSpan = document.createElement('span');
+        prefixSpan.className = 'snippet-prefix';
+        prefixSpan.textContent = snippet.prefix;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'snippet-name';
+        nameSpan.textContent = snippet.name;
+        li.appendChild(prefixSpan);
+        li.appendChild(nameSpan);
         li.addEventListener('click', () => onSnippetClick(snippet));
         els.list.appendChild(li);
       }
     }
 
-    els.body.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const ta = els.body;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const tab = '  ';
-        ta.value = ta.value.substring(0, start) + tab + ta.value.substring(end);
-        ta.selectionStart = ta.selectionEnd = start + tab.length;
-        updatePreview();
+    function bindClick(id, handler) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', handler);
       }
-    });
-    els.body.addEventListener('input', updatePreview);
-    els.editor.addEventListener('submit', (e) => {
-      e.preventDefault();
-      vscode.postMessage({
-        type: 'save',
-        snippet: {
-          id: state.editingId || undefined,
-          name: els.name.value,
-          prefix: els.prefix.value,
-          body: els.body.value,
-          imports: els.imports.value,
-          description: els.description.value
+    }
+
+    bindClick('reset-btn', resetForm);
+    bindClick('new-btn', resetForm);
+    bindClick('export-btn', () => vscode.postMessage({ type: 'export' }));
+    bindClick('import-btn', () => vscode.postMessage({ type: 'import' }));
+    if (els.resetOnboardingBtn) {
+      els.resetOnboardingBtn.addEventListener('click', () => {
+        if (confirm('Reset welcome panel and all usage tips? Your snippets are kept.')) {
+          vscode.postMessage({ type: 'resetOnboarding' });
         }
       });
-    });
-
-    document.getElementById('reset-btn').addEventListener('click', resetForm);
-    document.getElementById('new-btn').addEventListener('click', resetForm);
-    document.getElementById('export-btn').addEventListener('click', () => vscode.postMessage({ type: 'export' }));
-    document.getElementById('import-btn').addEventListener('click', () => vscode.postMessage({ type: 'import' }));
-    els.resetOnboardingBtn.addEventListener('click', () => {
-      if (confirm('Reset welcome panel and all usage tips? Your snippets are kept.')) {
-        vscode.postMessage({ type: 'resetOnboarding' });
-      }
-    });
-    els.deleteBtn.addEventListener('click', () => {
-      if (!state.editingId) return;
-      vscode.postMessage({ type: 'delete', id: state.editingId });
-      resetForm();
-    });
-    document.getElementById('welcome-dismiss').addEventListener('click', () => {
+    }
+    if (els.deleteBtn) {
+      els.deleteBtn.addEventListener('click', () => {
+        if (!state.editingId) return;
+        vscode.postMessage({ type: 'delete', id: state.editingId });
+        resetForm();
+      });
+    }
+    bindClick('welcome-dismiss', () => {
       els.welcome.hidden = true;
       vscode.postMessage({ type: 'dismissWelcome' });
     });
-    els.suggestionFilter.addEventListener('change', renderSuggestions);
+    if (els.suggestionFilter) {
+      els.suggestionFilter.addEventListener('change', renderSuggestions);
+    }
+    if (els.body) {
+      els.body.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const ta = els.body;
+          const start = ta.selectionStart;
+          const end = ta.selectionEnd;
+          const tab = '  ';
+          ta.value = ta.value.substring(0, start) + tab + ta.value.substring(end);
+          ta.selectionStart = ta.selectionEnd = start + tab.length;
+          updatePreview();
+        }
+      });
+      els.body.addEventListener('input', updatePreview);
+    }
+    if (els.editor) {
+      els.editor.addEventListener('submit', (e) => {
+        e.preventDefault();
+        vscode.postMessage({
+          type: 'save',
+          snippet: {
+            id: state.editingId || undefined,
+            name: els.name.value,
+            prefix: els.prefix.value,
+            body: els.body.value,
+            imports: els.imports.value,
+            description: els.description.value
+          }
+        });
+      });
+    }
 
     window.addEventListener('message', (event) => {
       const msg = event.data;
@@ -870,10 +1008,8 @@ function renderHtml(webview: vscode.Webview): string {
           state.suggestions = msg.suggestions || [];
           state.tips = msg.tips || [];
           els.welcome.hidden = !msg.showWelcome;
-          if (msg.devMode) {
-            els.resetOnboardingBtn.hidden = false;
-          } else {
-            els.resetOnboardingBtn.hidden = true;
+          if (els.resetOnboardingBtn) {
+            els.resetOnboardingBtn.hidden = !msg.devMode;
           }
           vscode.setState(state);
           renderTips();
