@@ -23,6 +23,46 @@ const CSHARP_LIKE = new Set(['csharp', 'fsharp']);
  * Inserts missing import lines at the top of the active document.
  * Language-aware dedup: module paths, named bindings (JS/TS), and exact lines.
  */
+/** Returns import lines that are not yet present in the document. */
+export function getMissingImportLines(
+  document: vscode.TextDocument,
+  importLines: string[]
+): string[] {
+  if (importLines.length === 0) {
+    return [];
+  }
+  return computeMissingImports(
+    importLines,
+    document.getText(),
+    document.languageId
+  );
+}
+
+/** Builds a single TextEdit to prepend missing imports (for completion additionalTextEdits). */
+export function buildImportTextEdit(
+  document: vscode.TextDocument,
+  importLines: string[]
+): vscode.TextEdit | undefined {
+  const missing = getMissingImportLines(document, importLines);
+  if (missing.length === 0) {
+    return undefined;
+  }
+
+  const language = document.languageId;
+  const insertionLine = findInsertionLine(document, language);
+  const needsTrailingBlank =
+    insertionLine < document.lineCount &&
+    document.lineAt(insertionLine).text.trim() !== '';
+
+  const textToInsert =
+    missing.join('\n') + '\n' + (needsTrailingBlank ? '\n' : '');
+
+  return vscode.TextEdit.insert(
+    new vscode.Position(insertionLine, 0),
+    textToInsert
+  );
+}
+
 export async function applyImports(
   editor: vscode.TextEditor,
   importLines: string[]
@@ -31,28 +71,14 @@ export async function applyImports(
     return false;
   }
 
-  const document = editor.document;
-  const existing = document.getText();
-  const language = document.languageId;
-
-  const missing = computeMissingImports(importLines, existing, language);
-  if (missing.length === 0) {
+  const edit = buildImportTextEdit(editor.document, importLines);
+  if (!edit) {
     return false;
   }
 
-  const insertionLine = findInsertionLine(document, language);
-  const insertionPos = new vscode.Position(insertionLine, 0);
-
-  const needsTrailingBlank =
-    insertionLine < document.lineCount &&
-    document.lineAt(insertionLine).text.trim() !== '';
-
-  const textToInsert =
-    missing.join('\n') + '\n' + (needsTrailingBlank ? '\n' : '');
-
-  const edit = new vscode.WorkspaceEdit();
-  edit.insert(document.uri, insertionPos, textToInsert);
-  return vscode.workspace.applyEdit(edit);
+  const workspaceEdit = new vscode.WorkspaceEdit();
+  workspaceEdit.set(editor.document.uri, [edit]);
+  return vscode.workspace.applyEdit(workspaceEdit);
 }
 
 function computeMissingImports(

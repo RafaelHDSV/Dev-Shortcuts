@@ -13,7 +13,6 @@ import {
   SnippetManagerViewProvider,
   VIEW_ID
 } from './views/snippetManagerView';
-import { hasSeenWelcome } from './utils/usageTips';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -23,9 +22,7 @@ export async function activate(
 
   const viewProvider = new SnippetManagerViewProvider(context, store);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(VIEW_ID, viewProvider, {
-      webviewOptions: { retainContextWhenHidden: true }
-    })
+    vscode.window.registerWebviewViewProvider(VIEW_ID, viewProvider)
   );
 
   registerCompletionProvider(context, store);
@@ -56,10 +53,6 @@ export async function activate(
       createAddFromSuggestionCommand(store)
     )
   );
-
-  if (!hasSeenWelcome(context) && store.getAll().length === 0) {
-    void vscode.commands.executeCommand('devShortcuts.openManager');
-  }
 }
 
 export function deactivate(): void {

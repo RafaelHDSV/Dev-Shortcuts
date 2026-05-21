@@ -19,15 +19,25 @@ export class SnippetStore {
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
-    await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
-    this.fileUri = vscode.Uri.joinPath(
-      this.context.globalStorageUri,
-      STORE_FILENAME
-    );
-
-    await this.load();
+    try {
+      await vscode.workspace.fs.createDirectory(this.context.globalStorageUri);
+      this.fileUri = vscode.Uri.joinPath(
+        this.context.globalStorageUri,
+        STORE_FILENAME
+      );
+      await this.load();
+    } catch (err) {
+      console.error('[Dev Shortcuts] Store init failed, starting empty:', err);
+      this.snippets = [];
+      this.fileUri = vscode.Uri.joinPath(
+        this.context.globalStorageUri,
+        STORE_FILENAME
+      );
+    }
     this.initialized = true;
   }
 

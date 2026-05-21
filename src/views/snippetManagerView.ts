@@ -64,15 +64,30 @@ export class SnippetManagerViewProvider
       enableScripts: true,
       localResourceRoots: [this.context.extensionUri]
     };
+
+    view.webview.onDidReceiveMessage((msg: WebviewInbound) => {
+      void this.handleMessage(msg).catch((err) => {
+        console.error('[Dev Shortcuts] webview message failed:', err);
+        this.post({
+          type: 'info',
+          message: 'Something went wrong. Try reopening the Dev Shortcuts view.'
+        });
+      });
+    });
+
     view.webview.html = renderHtml(view.webview);
 
-    view.webview.onDidReceiveMessage((msg: WebviewInbound) =>
-      this.handleMessage(msg)
-    );
+    view.onDidChangeVisibility(() => {
+      if (view.visible) {
+        this.pushInit();
+      }
+    });
 
     view.onDidDispose(() => {
       this.view = undefined;
     });
+
+    queueMicrotask(() => this.pushInit());
   }
 
   reveal(): void {
@@ -414,8 +429,17 @@ function renderHtml(webview: vscode.Webview): string {
   </div>
 
   <script nonce="${nonce}">
-    const vscode = acquireVsCodeApi();
-    const state = {
+    (function () {
+    const LINE_BREAK = String.fromCharCode(10);
+    let vscode;
+    try {
+      vscode = acquireVsCodeApi();
+    } catch (err) {
+      document.body.innerHTML =
+        '<p style="padding:12px">Dev Shortcuts failed to load. Reload the window (Developer: Reload Window).</p>';
+      return;
+    }
+    const state = vscode.getState() || {
       snippets: [],
       suggestions: [],
       tips: [],
@@ -449,13 +473,13 @@ function renderHtml(webview: vscode.Webview): string {
 
     function renderSnippetPreview(text) {
       if (!text) return '<span class="end">(empty)</span>';
-      const lines = text.split('\\n');
+      const lines = text.split(LINE_BREAK);
       return lines.map((line) => {
         let out = escapeHtml(line);
         out = out.replace(/\\$\\{([0-9]+):([^}]+)\\}/g, '<span class="ts">$2</span>');
         out = out.replace(/\\$([0-9]+)/g, '<span class="ts">[tab $1]</span>');
         out = out.replace(/\\$TM_([A-Za-z0-9_]+)/g, '<span class="ts">TM_$1</span>');
-        if (/\\$0/.test(line)) { out += ' <span class="end">← final cursor</span>'; }
+        if (/\\$0/.test(line)) { out += ' <span class="end">(final cursor)</span>'; }
         return out;
       }).join('<br>');
     }
@@ -561,8 +585,8 @@ function renderHtml(webview: vscode.Webview): string {
       els.name.value = snippet.name;
       els.prefix.value = snippet.prefix;
       els.description.value = snippet.description || '';
-      els.body.value = (snippet.body || []).join('\\n');
-      els.imports.value = (snippet.imports || []).join('\\n');
+      els.body.value = (snippet.body || []).join(LINE_BREAK);
+      els.imports.value = (snippet.imports || []).join(LINE_BREAK);
       els.title.textContent = 'Edit snippet';
       els.deleteBtn.hidden = false;
       clearStatus();
@@ -632,6 +656,7 @@ function renderHtml(webview: vscode.Webview): string {
           state.suggestions = msg.suggestions || [];
           state.tips = msg.tips || [];
           if (msg.showWelcome) els.welcome.hidden = false;
+          vscode.setState(state);
           renderTips();
           renderList();
           renderSuggestions();
@@ -659,6 +684,7 @@ function renderHtml(webview: vscode.Webview): string {
     });
 
     vscode.postMessage({ type: 'ready' });
+    })();
   </script>
 </body>
 </html>`;

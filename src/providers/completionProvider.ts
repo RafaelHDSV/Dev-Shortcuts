@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { SnippetStore } from '../storage/snippetStore';
-import { applyImports } from '../import/importResolver';
+import { buildImportTextEdit } from '../import/importResolver';
 import { setLastSnippetId } from '../storage/lastSnippet';
 import { Snippet } from '../types';
 
-const ON_SNIPPET_ACCEPTED = 'devShortcuts.internal.onSnippetAccepted';
+const TRACK_LAST_COMMAND = 'devShortcuts.internal.trackLastSnippet';
 
 export function registerCompletionProvider(
   context: vscode.ExtensionContext,
@@ -12,17 +12,11 @@ export function registerCompletionProvider(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      ON_SNIPPET_ACCEPTED,
-      async (snippetId: string) => {
-        const snippet = store.getById(snippetId);
-        const editor = vscode.window.activeTextEditor;
-        if (!snippet || !editor) {
-          return;
+      TRACK_LAST_COMMAND,
+      (snippetId: string) => {
+        if (typeof snippetId === 'string' && snippetId) {
+          void setLastSnippetId(context, snippetId);
         }
-        if (snippet.imports?.length) {
-          await applyImports(editor, snippet.imports);
-        }
-        await setLastSnippetId(context, snippet.id);
       }
     )
   );
@@ -51,12 +45,18 @@ class SnippetCompletionItemProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.CompletionItem[] {
-    const lineText = document.lineAt(position).text.substring(0, position.character);
+    const lineText = document
+      .lineAt(position)
+      .text.substring(0, position.character);
     const bangIndex = lineText.lastIndexOf('!');
-    if (bangIndex === -1) {return [];}
+    if (bangIndex === -1) {
+      return [];
+    }
 
     const typed = lineText.substring(bangIndex);
-    if (!/^![\w-]*$/.test(typed)) {return [];}
+    if (!/^![\w-]*$/.test(typed)) {
+      return [];
+    }
 
     const range = new vscode.Range(
       position.line,
@@ -65,30 +65,42 @@ class SnippetCompletionItemProvider
       position.character
     );
 
-    const snippets = this.store.getAll();
-    return snippets.map((snippet) => this.buildItem(snippet, range));
+    return this.store
+      .getAll()
+      .map((snippet) => buildItem(document, snippet, range));
+  }
+}
+
+function buildItem(
+  document: vscode.TextDocument,
+  snippet: Snippet,
+  range: vscode.Range
+): vscode.CompletionItem {
+  const item = new vscode.CompletionItem(
+    { label: snippet.prefix, description: snippet.name },
+    vscode.CompletionItemKind.Snippet
+  );
+  item.detail = snippet.name;
+  item.documentation = buildDocumentation(snippet);
+  item.insertText = new vscode.SnippetString(snippet.body.join('\n'));
+  item.range = range;
+  item.filterText = snippet.prefix;
+  item.sortText = snippet.prefix;
+
+  if (snippet.imports?.length) {
+    const importEdit = buildImportTextEdit(document, snippet.imports);
+    if (importEdit) {
+      item.additionalTextEdits = [importEdit];
+    }
   }
 
-  private buildItem(snippet: Snippet, range: vscode.Range): vscode.CompletionItem {
-    const item = new vscode.CompletionItem(
-      { label: snippet.prefix, description: snippet.name },
-      vscode.CompletionItemKind.Snippet
-    );
-    item.detail = snippet.name;
-    item.documentation = buildDocumentation(snippet);
-    item.insertText = new vscode.SnippetString(snippet.body.join('\n'));
-    item.range = range;
-    item.filterText = snippet.prefix;
-    item.sortText = snippet.prefix;
+  item.command = {
+    command: TRACK_LAST_COMMAND,
+    title: 'Track Dev Shortcuts snippet',
+    arguments: [snippet.id]
+  };
 
-    item.command = {
-      command: ON_SNIPPET_ACCEPTED,
-      title: 'Prepare Dev Shortcuts snippet',
-      arguments: [snippet.id]
-    };
-
-    return item;
-  }
+  return item;
 }
 
 function buildDocumentation(snippet: Snippet): vscode.MarkdownString {
