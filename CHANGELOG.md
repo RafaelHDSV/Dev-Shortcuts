@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-21
+
+### Added
+
+- First stable public release: user-owned `!` snippets in any language, Activity Bar manager, import/export JSON, opt-in Suggestions gallery, live preview, default keybindings, and extended import deduplication.
+
+### Changed
+
+- Version **1.0.0** marks the product ready for Visual Studio Marketplace and Open VSX (replaces pre-release 0.1.x–0.2.x lines).
+
+### Notes
+
+- Snippet data format remains `schemaVersion: 1`; upgrading from 0.2.x requires no migration.
+- See `docs/manual-test-checklist.md` before publishing a VSIX.
+
 ## [0.2.1] - 2026-05-21
 
 ### Removed

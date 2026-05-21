@@ -2,7 +2,7 @@
 
 Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 
-**Ultima validacao release:** v0.2.1 — 2026-05-21 (compile + lint OK; checklist manual pendente de execucao completa no F5 pelo mantenedor).
+**Ultima validacao release:** **v1.0.0** — executar checklist completo no F5 antes de publicar VSIX no Marketplace / Open VSX.
 
 ## Preparacao
 
@@ -60,12 +60,12 @@ Cenarios a executar no Extension Development Host (`F5`) antes de cada release.
 - [ ] Itens custom NAO aparecem com tag `Deprecated`.
 - [ ] `settings.json` nao tem mais a chave `devShortcuts.customSnippets` exigida (a antiga foi removida do contributes).
 
-## Pos-MVP (v0.2.0)
+## Pos-MVP (v0.2.0+) — incluido em 1.0.0
 
 - [ ] Aba **Suggestions**: filtrar React / Generic; **Add to library** adiciona sem ativar em completion ate salvar na biblioteca.
 - [ ] Prefixo duplicado ao adicionar sugestao: oferece renomear (`!rus2`, etc.).
 - [ ] **Live preview** atualiza ao digitar body (`${1:foo}`, `$0` destacados).
-- [ ] Manager sem Welcome nem cards de dicas; referencia em README.md (secao Reference). (v0.2.1+)
+- [ ] Manager sem Welcome nem cards de dicas; referencia em README.md (secao Reference). (1.0.0)
 - [ ] `Ctrl+Alt+S` / `Cmd+Alt+S` abre quick pick de insercao.
 - [ ] `Ctrl+Alt+Shift+S` reinsere ultimo snippet usado.
 - [ ] `Ctrl+Alt+M` foca o manager.

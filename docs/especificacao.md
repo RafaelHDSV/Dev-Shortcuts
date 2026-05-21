@@ -1,8 +1,8 @@
 # Dev Shortcuts
 
-**Versão:** 0.1 (rascunho)  
-**Última atualização:** 2026-05-17  
-**Status:** Direção aprovada no Q&A de produto; a implementação pode divergir até cada item ser entregue.
+**Versão:** 1.0 (implementada)  
+**Última atualização:** 2026-05-21  
+**Status:** Release **1.0.0** publicável (Marketplace / Open VSX). Detalhes de entrega em `CHANGELOG.md` e `.issues/`.
 
 > **Idioma deste documento:** português do Brasil (pt-BR).  
 > **README, Marketplace, CHANGELOG e textos da extensão (UI, notificações, webview):** inglês.

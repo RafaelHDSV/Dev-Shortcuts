@@ -1,7 +1,6 @@
 # Dev Shortcuts
 
-[![Demo](demo.mp4)](https://github.com/user-attachments/assets/8c57d8f5-c514-47e1-acb5-3ca5629eff71
-)
+[![Demo](demo.mp4)](https://github.com/user-attachments/assets/8c57d8f5-c514-47e1-acb5-3ca5629eff71)
 
 User-owned snippet shortcuts for VS Code and Cursor, triggered by the `!` prefix in **any** language.
 

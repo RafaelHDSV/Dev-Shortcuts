@@ -2,7 +2,7 @@
 
 > Contexto primario para assistentes de IA (regra `ai-context.mdc`). Atualize este arquivo ao evoluir o produto.
 
-**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Versao:** 0.2.1 | **Ano:** 2026
+**Pacote:** `dev-shortcuts` | **Publisher:** `RafaelVieira1720` | **Versao:** 1.0.0 | **Ano:** 2026
 
 ---
 
@@ -57,10 +57,10 @@ src/
 2. Armazenamento exclusivamente local (`globalStorageUri`), sem telemetria, sem chamadas de rede.
 3. UI em **ingles**; documentacao tecnica em pt-BR fica restrita a `docs/` e `.issues/`.
 4. Sem migracao de `devShortcuts.customSnippets` do prototipo; usuario reimporta via comando.
-5. Galeria de sugestoes opt-in (v0.2+); nada do catalogo entra em completion ate Add to library.
+5. Galeria de sugestoes opt-in; nada do catalogo entra em completion ate Add to library.
 6. Conflito com snippets nativos (`.code-snippets`) e tratado apenas via README.
 7. Ativacao: `onStartupFinished` + `onView:devShortcuts.snippetManager`.
-8. Onboarding na webview removido (v0.2.1); guia no README (Reference).
+8. Guia de uso no README (Reference); sem onboarding na webview.
 
 ---
 
@@ -91,12 +91,14 @@ Atalhos padrao: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M
 
 ---
 
-## Versao 0.2.x (entregue)
+## Historico de versoes (resumo)
 
-- Galeria **Suggestions** (`src/snippets/suggestions.ts`) — React + generic.
-- Preview ao vivo na webview; clique na linha inteira na lista de sugestoes.
-- `insertLast` + `lastSnippet.ts`; import resolver ampliado.
-- v0.2.1: sem welcome/tips na UI; README Reference; limpeza de fontes legado.
+| Versao | Marco |
+|--------|--------|
+| 0.1.0 | MVP: store JSON, webview CRUD, completion `!`, import/export |
+| 0.2.0 | Suggestions, insertLast, keybindings, dedup ampliado, live preview |
+| 0.2.1 | Polish: docs, sem onboarding na UI, VSIX publish docs |
+| **1.0.0** | **Release estavel** para Marketplace e Open VSX |
 
 ## Fora de escopo
 
@@ -107,4 +109,4 @@ Atalhos padrao: `Ctrl+Alt+S` insert, `Ctrl+Alt+Shift+S` insert last, `Ctrl+Alt+M
 
 ---
 
-*Gerado com Vieira CLI; atualizado no incremento release polish v0.2.1.*
+*Atualizado para release **1.0.0**.*
