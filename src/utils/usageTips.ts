@@ -64,7 +64,7 @@ export async function dismissTip(
 }
 
 export function hasSeenWelcome(context: vscode.ExtensionContext): boolean {
-  return context.globalState.get<boolean>(WELCOME_SEEN_KEY, false);
+  return context.globalState.get<boolean>(WELCOME_SEEN_KEY, false) === true;
 }
 
 export async function markWelcomeSeen(
@@ -77,6 +77,6 @@ export async function markWelcomeSeen(
 export async function resetOnboarding(
   context: vscode.ExtensionContext
 ): Promise<void> {
-  await context.globalState.update(WELCOME_SEEN_KEY, undefined);
-  await context.globalState.update(DISMISSED_KEY, undefined);
+  await context.globalState.update(WELCOME_SEEN_KEY, false);
+  await context.globalState.update(DISMISSED_KEY, []);
 }

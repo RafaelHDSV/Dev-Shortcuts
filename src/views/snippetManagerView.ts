@@ -10,7 +10,8 @@ import {
   getActiveTips,
   hasSeenWelcome,
   markWelcomeSeen,
-  resetOnboarding
+  resetOnboarding,
+  USAGE_TIPS
 } from '../utils/usageTips';
 import { validateSnippet } from '../validation/snippetValidator';
 
@@ -47,7 +48,12 @@ type WebviewOutbound =
       prefix: string
     }
   | { type: 'validationError'; field: string; message: string }
-  | { type: 'info'; message: string };
+  | { type: 'info'; message: string }
+  | {
+      type: 'onboardingReset'
+      tips: typeof USAGE_TIPS
+      showWelcome: boolean
+    };
 
 interface SnippetDraft {
   id?: string
@@ -182,7 +188,8 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
           return;
         }
         await resetOnboarding(this.context);
-        void this.refreshUi();
+        await this.refreshUi();
+        this.pushOnboardingReset();
         this.post({
           type: 'info',
           message: 'Onboarding reset. Welcome and tips are visible again.'
@@ -193,7 +200,10 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
   /** Called from dev-only command after reset. */
   refreshAfterOnboardingReset(): void {
-    void this.refreshUi();
+    void (async () => {
+      await this.refreshUi();
+      this.pushOnboardingReset();
+    })();
   }
 
   private async saveSnippet(draft: SnippetDraft): Promise<void> {
@@ -250,6 +260,15 @@ export class SnippetManagerViewProvider implements vscode.WebviewViewProvider {
 
   private pushTips(): void {
     this.post({ type: 'tips', data: getActiveTips(this.context) });
+  }
+
+  /** Forces welcome + all tips visible in the webview after reset. */
+  private pushOnboardingReset(): void {
+    this.post({
+      type: 'onboardingReset',
+      tips: USAGE_TIPS,
+      showWelcome: true
+    });
   }
 
   private post(message: WebviewOutbound): void {
@@ -355,12 +374,16 @@ function renderHtml(webview: vscode.Webview): string {
     background: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);
   }
-  ul.suggestions li {
-    padding: 6px 8px;
+  ul.suggestions li.suggestion-item {
+    padding: 0;
     border-bottom: 1px solid var(--vscode-panel-border);
+    cursor: pointer;
   }
-  ul.suggestions li:last-child { border-bottom: none; }
-  ul.suggestions li.active-suggestion {
+  ul.suggestions li.suggestion-item:last-child { border-bottom: none; }
+  ul.suggestions li.suggestion-item:hover {
+    background: var(--vscode-list-hoverBackground);
+  }
+  ul.suggestions li.suggestion-item.active-suggestion {
     background: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);
   }
@@ -391,9 +414,11 @@ function renderHtml(webview: vscode.Webview): string {
   .suggestion-actions {
     display: flex;
     gap: 6px;
-    margin-top: 6px;
+    padding: 4px 8px 6px;
     flex-wrap: wrap;
+    border-top: 1px solid var(--vscode-panel-border);
   }
+  .library-desc { margin: 0 0 8px; }
   .library-editor { margin-top: 4px; }
   .badge {
     font-size: 0.7em;
@@ -486,6 +511,7 @@ function renderHtml(webview: vscode.Webview): string {
   </div>
 
   <div id="panel-library" class="panel active">
+    <p class="hint library-desc">Snippets you save here show up in the editor when you type <code>!</code> and the prefix. Create, import, or export below.</p>
     <div class="toolbar">
       <button type="button" id="new-btn">New snippet</button>
       <button type="button" id="export-btn" class="secondary">Export</button>
@@ -733,6 +759,15 @@ function renderHtml(webview: vscode.Webview): string {
       renderSuggestions();
     }
 
+    function applyWelcomeVisible(show) {
+      if (show) {
+        els.welcome.hidden = false;
+        els.welcome.removeAttribute('hidden');
+      } else {
+        els.welcome.hidden = true;
+      }
+    }
+
     function setTab(name) {
       state.tab = name;
       vscode.setState(state);
@@ -787,9 +822,14 @@ function renderHtml(webview: vscode.Webview): string {
       }
       for (const s of items) {
         const li = document.createElement('li');
+        li.className = 'suggestion-item';
         if (state.selectedSuggestionCatalogId === s.catalogId) {
           li.classList.add('active-suggestion');
         }
+        li.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          selectSuggestion(s);
+        });
         const main = document.createElement('div');
         main.className = 'suggestion-row-main';
         const prefixSpan = document.createElement('span');
@@ -804,10 +844,6 @@ function renderHtml(webview: vscode.Webview): string {
         nameSpan.textContent = s.name;
         main.appendChild(prefixSpan);
         main.appendChild(nameSpan);
-        main.addEventListener('click', (e) => {
-          if (e.target.closest('button')) return;
-          selectSuggestion(s);
-        });
         li.appendChild(main);
 
         const actions = document.createElement('div');
@@ -1007,7 +1043,7 @@ function renderHtml(webview: vscode.Webview): string {
           state.snippets = msg.snippets || [];
           state.suggestions = msg.suggestions || [];
           state.tips = msg.tips || [];
-          els.welcome.hidden = !msg.showWelcome;
+          applyWelcomeVisible(!!msg.showWelcome);
           if (els.resetOnboardingBtn) {
             els.resetOnboardingBtn.hidden = !msg.devMode;
           }
@@ -1016,6 +1052,12 @@ function renderHtml(webview: vscode.Webview): string {
           renderList();
           renderSuggestions();
           updatePreview();
+          return;
+        case 'onboardingReset':
+          state.tips = msg.tips || [];
+          applyWelcomeVisible(!!msg.showWelcome);
+          vscode.setState(state);
+          renderTips();
           return;
         case 'snippets':
           state.snippets = msg.data || [];
