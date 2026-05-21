@@ -13,6 +13,7 @@ node_modules
 dist
 dist-ssr
 *.local
+docs/*
 
 # Editor directories and files
 .vscode/*
@@ -26,7 +27,6 @@ dist-ssr
 *.sw?
 versions/*
 out/*
-*.vsix
 
 # Issues
 issues
