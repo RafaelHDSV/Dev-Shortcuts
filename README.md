@@ -1,8 +1,12 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/RafaelHDSV/Dev-Shortcuts)
-[![VS Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/RafaelVieira1720.dev-shortcuts)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
-[![VS Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/i/RafaelVieira1720.dev-shortcuts)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
-[![VS Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/RafaelVieira1720.dev-shortcuts)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
-[![VS Marketplace Stars](https://img.shields.io/visual-studio-marketplace/stars/RafaelVieira1720.dev-shortcuts)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
+
+[![Version](https://vsmarketplacebadges.dev/version/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
+
+[![Installs](https://vsmarketplacebadges.dev/installs/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
+
+[![Downloads](https://vsmarketplacebadges.dev/downloads/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
+
+[![Rating](https://vsmarketplacebadges.dev/rating/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
 
 # Dev Shortcuts
 
