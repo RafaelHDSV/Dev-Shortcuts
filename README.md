@@ -1,4 +1,3 @@
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/RafaelHDSV/Dev-Shortcuts)
 [![Version](https://vsmarketplacebadges.dev/version/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
 [![Installs](https://vsmarketplacebadges.dev/installs/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
 [![Downloads](https://vsmarketplacebadges.dev/downloads/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
