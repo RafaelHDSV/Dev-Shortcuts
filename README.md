@@ -3,6 +3,8 @@
 [![Installs](https://vsmarketplacebadges.dev/installs/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
 [![Downloads](https://vsmarketplacebadges.dev/downloads/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
 [![Rating](https://vsmarketplacebadges.dev/rating/RafaelVieira1720.dev-shortcuts.svg)](https://marketplace.visualstudio.com/items?itemName=RafaelVieira1720.dev-shortcuts)
+[![Open VSX Version](https://img.shields.io/open-vsx/v/RafaelVieira1720/dev-shortcuts)](https://open-vsx.org/extension/RafaelVieira1720/dev-shortcuts)
+[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/RafaelVieira1720/dev-shortcuts)](https://open-vsx.org/extension/RafaelVieira1720/dev-shortcuts)
 
 # Dev Shortcuts
 
