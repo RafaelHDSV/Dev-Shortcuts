@@ -1,3 +1,5 @@
+![https://open-vsx.org/extension/RafaelVieira1720/dev-shortcuts](https://img.shields.io/open-vsx/dt/RafaelVieira1720/dev-shortcuts)
+
 # Dev Shortcuts
 
 User-owned snippet shortcuts for VS Code and Cursor, triggered by the `!` prefix in **any** language.
